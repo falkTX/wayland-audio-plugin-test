@@ -40,21 +40,27 @@ static void wl_registry_global_announce(struct app* const app,
         assert(app->wl_shm == NULL);
         app->wl_shm = wl_registry_bind(app->wl_registry, name, &wl_shm_interface, 1);
     }
-    else if (strcmp(interface, wl_subcompositor_interface.name) == 0)
+    else if (app->embed)
     {
-        assert(app->wl_subcompositor == NULL);
-        app->wl_subcompositor = wl_registry_bind(app->wl_registry, name, &wl_subcompositor_interface, 1);
+        /**/ if (strcmp(interface, wl_subcompositor_interface.name) == 0)
+        {
+            assert(app->wl_subcompositor == NULL);
+            app->wl_subcompositor = wl_registry_bind(app->wl_registry, name, &wl_subcompositor_interface, 1);
+        }
     }
-    else if (strcmp(interface, xdg_decoration_manager_interface.name) == 0)
+    else
     {
-        assert(app->xdg_decoration_manager == NULL);
-        app->xdg_decoration_manager = wl_registry_bind(app->wl_registry, name, &xdg_decoration_manager_interface, 1);
-    }
+        /**/ if (strcmp(interface, xdg_decoration_manager_interface.name) == 0)
+        {
+            assert(app->xdg_decoration_manager == NULL);
+            app->xdg_decoration_manager = wl_registry_bind(app->wl_registry, name, &xdg_decoration_manager_interface, 1);
+        }
 
-    else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
-    {
-        assert(app->xdg_wm_base == NULL);
-        app->xdg_wm_base = wl_registry_bind(app->wl_registry, name, &xdg_wm_base_interface, 1);
+        else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
+        {
+            assert(app->xdg_wm_base == NULL);
+            app->xdg_wm_base = wl_registry_bind(app->wl_registry, name, &xdg_wm_base_interface, 1);
+        }
     }
 }
 
@@ -428,13 +434,14 @@ struct app* app_init(struct wl_display* const wl_display,
     app->r = app->g = 1.f;
     app->name = "testing";
 
-    if (wl_display == NULL)
+    if (wl_display == NULL || wl_surface == NULL)
     {
         app->wl_display = wl_display_connect(NULL);
         assert(app->wl_display != NULL);
     }
     else
     {
+        app->embed = true;
         app->wl_display = wl_display;
     }
 
@@ -453,10 +460,18 @@ struct app* app_init(struct wl_display* const wl_display,
     assert(app->wl_seat != NULL);
     assert(app->wl_shm != NULL);
 
-    // TODO optional
-    assert(app->wl_subcompositor != NULL);
-    assert(app->xdg_decoration_manager != NULL);
-    assert(app->xdg_wm_base != NULL);
+    if (app->embed)
+    {
+        assert(app->wl_subcompositor != NULL);
+        assert(app->xdg_decoration_manager == NULL);
+        assert(app->xdg_wm_base == NULL);
+    }
+    else
+    {
+        assert(app->wl_subcompositor == NULL);
+        assert(app->xdg_decoration_manager != NULL);
+        assert(app->xdg_wm_base != NULL);
+    }
 
     err = wl_seat_add_listener(app->wl_seat, &wl_seat_listener, app);
     assert(err == 0);
@@ -467,7 +482,7 @@ struct app* app_init(struct wl_display* const wl_display,
     err = wl_surface_add_listener(app->wl_surface, &wl_surface_listener, app);
     assert(err == 0);
 
-    if (wl_surface != NULL)
+    if (app->embed)
     {
         app->wl_subsurface = wl_subcompositor_get_subsurface(app->wl_subcompositor, app->wl_surface, wl_surface);
         assert(app->wl_subsurface != NULL);
@@ -602,14 +617,16 @@ void app_destroy(struct app* const app)
     wl_egl_window_destroy(app->egl.window);
     eglTerminate(app->egl.display);
 
-    if (app->wl_subsurface != NULL)
+    if (app->embed)
     {
+        assert(app->xdg_toplevel_decoration == NULL);
         assert(app->xdg_toplevel == NULL);
         assert(app->xdg_surface == NULL);
         wl_subsurface_destroy(app->wl_subsurface);
     }
     else
     {
+        assert(app->wl_subsurface == NULL);
         xdg_toplevel_decoration_destroy(app->xdg_toplevel_decoration);
         xdg_toplevel_destroy(app->xdg_toplevel);
         xdg_surface_destroy(app->xdg_surface);
@@ -620,17 +637,20 @@ void app_destroy(struct app* const app)
     wl_seat_destroy(app->wl_seat);
     wl_shm_destroy(app->wl_shm);
 
-    // TODO optional
-    wl_subcompositor_destroy(app->wl_subcompositor);
-    xdg_decoration_manager_destroy(app->xdg_decoration_manager);
-    xdg_wm_base_destroy(app->xdg_wm_base);
+    if (app->embed)
+    {
+        wl_subcompositor_destroy(app->wl_subcompositor);
+    }
+    else
+    {
+        xdg_decoration_manager_destroy(app->xdg_decoration_manager);
+        xdg_wm_base_destroy(app->xdg_wm_base);
+    }
 
     wl_registry_destroy(app->wl_registry);
 
-    if (app->wl_subsurface == NULL)
-    {
+    if (!app->embed)
         wl_display_disconnect(app->wl_display);
-    }
 
     free(app);
 }

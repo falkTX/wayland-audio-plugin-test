@@ -48,7 +48,7 @@ struct app {
     struct xdg_wm_base* xdg_wm_base;
     struct egl egl;
     const char* name;
-    bool closing;
+    bool closing, embed;
     int32_t width;
     int32_t height;
     float r, g, b;
