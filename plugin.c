@@ -87,7 +87,6 @@ const LV2_Descriptor* lv2_descriptor(const uint32_t index)
 
 struct ui {
     struct app* app;
-    float r, g, b;
 };
 
 static LV2UI_Handle lv2ui_instantiate(const LV2UI_Descriptor* const descriptor,
@@ -199,21 +198,24 @@ static void lv2ui_port_event(const LV2UI_Handle handle,
     switch (portIndex)
     {
     case 4:
-        ui->r = value;
+        ui->app->r = value;
         break;
     case 5:
-        ui->g = value;
+        ui->app->g = value;
         break;
     case 6:
-        ui->b = value;
+        ui->app->b = value;
         break;
     }
+
+    app_update(ui->app);
 }
 
 static int lv2ui_idle(LV2UI_Handle handle)
 {
     struct ui* const ui = handle;
 
+    app_idle(ui->app);
     return ui->app->closing ? 1 : 0;
 }
 

@@ -388,7 +388,7 @@ static void xdg_surface_configure(void* const data,
 
     glViewport(0, 0, app->width, app->height);
 
-    glClearColor(1.0, 1.0, 0.0, 1.0);
+    glClearColor(app->r, app->g, app->b, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     // glFlush();
     err = eglSwapBuffers(app->egl.display, app->egl.surface);
@@ -467,6 +467,8 @@ struct app* app_init(struct wl_surface* const wl_surface, const char* const titl
     int err;
     struct app* const app = calloc(1, sizeof(struct app));
     assert(app != NULL);
+
+    app->r = app->g = 1.f;
 
     app->wl_display = wl_display_connect(NULL);
     assert(app->wl_display != NULL);
@@ -578,9 +580,6 @@ struct app* app_init(struct wl_surface* const wl_surface, const char* const titl
     err = eglSwapBuffers(app->egl.display, app->egl.surface);
     assert(err == EGL_TRUE);
 
-    // needed?
-    wl_surface_commit(app->wl_surface);
-
     err = eglMakeCurrent(app->egl.display, NULL, NULL, NULL);
     assert(err == EGL_TRUE);
 
@@ -602,8 +601,27 @@ void app_run(struct app* const app)
 
 void app_idle(struct app* const app)
 {
-    // TODO
+    wl_display_dispatch_pending(app->wl_display);
     wl_display_roundtrip(app->wl_display);
+}
+
+void app_update(struct app* app)
+{
+    int err;
+
+    err = eglMakeCurrent(app->egl.display, app->egl.surface, app->egl.surface, app->egl.context);
+    assert(err == EGL_TRUE);
+
+    glClearColor(app->r, app->g, app->b, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    err = eglSwapBuffers(app->egl.display, app->egl.surface);
+    assert(err == EGL_TRUE);
+
+    wl_surface_commit(app->wl_surface);
+
+    err = eglMakeCurrent(app->egl.display, NULL, NULL, NULL);
+    assert(err == EGL_TRUE);
 }
 
 void app_destroy(struct app* const app)

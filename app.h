@@ -37,6 +37,7 @@ struct app {
     bool closing;
     int32_t width;
     int32_t height;
+    float r, g, b;
 };
 
 // init everything, allow passing custom initial values
@@ -50,6 +51,9 @@ void app_run(struct app* app);
 
 // run loop once (non-blocking)
 void app_idle(struct app* app);
+
+// update window color
+void app_update(struct app* app);
 
 // destroy app
 void app_destroy(struct app* app);
