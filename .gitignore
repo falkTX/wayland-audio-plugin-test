@@ -1,3 +1,4 @@
 *.o
+*.so
 wayland-audio-plugin-test
 proto/*.*

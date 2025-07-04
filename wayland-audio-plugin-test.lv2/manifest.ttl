@@ -1,0 +1,93 @@
+@prefix doap: <http://usefulinc.com/ns/doap#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix lv2:  <http://lv2plug.in/ns/lv2core#> .
+@prefix opts: <http://lv2plug.in/ns/ext/options#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ui:   <http://lv2plug.in/ns/extensions/ui#> .
+
+ui:WaylandSurfaceUI
+    a rdfs:Class ,
+        owl:Class ;
+    rdfs:subClassOf ui:UI ;
+    rdfs:label "Wayland Surface UI" ;
+    rdfs:comment "A UI where the widget is a pointer to a wl_surface." .
+
+<https://github.com/falkTX/wayland-audio-plugin-test>
+    a lv2:Plugin , lv2:UtilityPlugin ;
+
+    doap:name "Wayland Audio Plugin Test" ;
+    doap:license <http://spdx.org/licenses/GPL-3.0-or-later.html> ;
+
+    doap:maintainer [
+        foaf:name "falkTX" ;
+        foaf:homepage <https://falktx.berlin/> ;
+    ] ;
+
+    lv2:binary <plugin.so> ;
+
+    lv2:port [
+        a lv2:InputPort, lv2:AudioPort ;
+        lv2:index 0 ;
+        lv2:symbol "in1" ;
+        lv2:name "Input 1" ;
+    ] , [
+        a lv2:InputPort, lv2:AudioPort ;
+        lv2:index 1 ;
+        lv2:symbol "in2" ;
+        lv2:name "Input 2" ;
+    ] , [
+        a lv2:OutputPort, lv2:AudioPort ;
+        lv2:index 2 ;
+        lv2:symbol "out1" ;
+        lv2:name "Output 1" ;
+    ] , [
+        a lv2:OutputPort, lv2:AudioPort ;
+        lv2:index 3 ;
+        lv2:symbol "out2" ;
+        lv2:name "Output 2" ;
+    ] , [
+        a lv2:InputPort, lv2:ControlPort ;
+        lv2:index 4 ;
+        lv2:name "Red" ;
+        lv2:symbol "red" ;
+        lv2:default 0.0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] , [
+        a lv2:InputPort, lv2:ControlPort ;
+        lv2:index 5 ;
+        lv2:name "Blue" ;
+        lv2:symbol "blue" ;
+        lv2:default 0.0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] , [
+        a lv2:InputPort, lv2:ControlPort ;
+        lv2:index 6 ;
+        lv2:name "Green" ;
+        lv2:symbol "green" ;
+        lv2:default 0.0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ;
+
+    lv2:microVersion 0 ;
+    lv2:minorVersion 0 ;
+
+    rdfs:comment "" ;
+
+    ui:ui <https://github.com/falkTX/wayland-audio-plugin-test#ui> .
+
+<https://github.com/falkTX/wayland-audio-plugin-test#ui>
+    a ui:WaylandSurfaceUI ;
+    ui:binary <plugin.so> ;
+    lv2:extensionData ui:idleInterface ,
+                      ui:showInterface ;
+
+    lv2:optionalFeature ui:parent ;
+
+    lv2:requiredFeature opts:options ,
+                        ui:idleInterface ;
+
+    opts:supportedOption <http://lv2plug.in/ns/ext/parameters#sampleRate> .
