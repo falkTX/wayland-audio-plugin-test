@@ -11,7 +11,7 @@
 
 int main()
 {
-    struct app* const app = app_init(NULL, "testing", 1.0f);
+    struct app* const app = app_init(NULL, NULL, "testing", 1.0f);
     assert(app != NULL);
 
 #if 1

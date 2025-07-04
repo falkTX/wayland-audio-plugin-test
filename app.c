@@ -10,8 +10,10 @@
 #include <string.h>
 
 #include <wayland-client.h>
-#include <xdg-shell.h>
 #include <GLES2/gl2.h>
+
+#include "proto/xdg-decoration.h"
+#include "proto/xdg-shell.h"
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -43,6 +45,12 @@ static void wl_registry_global_announce(struct app* const app,
         assert(app->wl_subcompositor == NULL);
         app->wl_subcompositor = wl_registry_bind(app->wl_registry, name, &wl_subcompositor_interface, 1);
     }
+    else if (strcmp(interface, xdg_decoration_manager_interface.name) == 0)
+    {
+        assert(app->xdg_decoration_manager == NULL);
+        app->xdg_decoration_manager = wl_registry_bind(app->wl_registry, name, &xdg_decoration_manager_interface, 1);
+    }
+
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
         assert(app->xdg_wm_base == NULL);
@@ -444,13 +452,13 @@ struct app* app_init(struct wl_display* const wl_display,
     assert(app->wl_compositor != NULL);
     assert(app->wl_seat != NULL);
     assert(app->wl_shm != NULL);
+
+    // TODO optional
     assert(app->wl_subcompositor != NULL);
+    assert(app->xdg_decoration_manager != NULL);
     assert(app->xdg_wm_base != NULL);
 
     err = wl_seat_add_listener(app->wl_seat, &wl_seat_listener, app);
-    assert(err == 0);
-
-    err = xdg_wm_base_add_listener(app->xdg_wm_base, &xdg_wm_base_listener, app);
     assert(err == 0);
 
     app->wl_surface = wl_compositor_create_surface(app->wl_compositor);
@@ -466,6 +474,9 @@ struct app* app_init(struct wl_display* const wl_display,
     }
     else
     {
+        err = xdg_wm_base_add_listener(app->xdg_wm_base, &xdg_wm_base_listener, app);
+        assert(err == 0);
+
         app->xdg_surface = xdg_wm_base_get_xdg_surface(app->xdg_wm_base, app->wl_surface);
         assert(app->xdg_surface != NULL);
 
@@ -478,6 +489,10 @@ struct app* app_init(struct wl_display* const wl_display,
         err = xdg_toplevel_add_listener(app->xdg_toplevel, &xdg_toplevel_listener, app);
         assert(err == 0);
 
+        app->xdg_toplevel_decoration = xdg_decoration_manager_get_toplevel_decoration(app->xdg_decoration_manager, app->xdg_toplevel);
+        assert(app->xdg_toplevel_decoration != NULL);
+
+        xdg_toplevel_decoration_set_mode(app->xdg_toplevel_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
         xdg_toplevel_set_title(app->xdg_toplevel, title);
     }
 
@@ -595,6 +610,7 @@ void app_destroy(struct app* const app)
     }
     else
     {
+        xdg_toplevel_decoration_destroy(app->xdg_toplevel_decoration);
         xdg_toplevel_destroy(app->xdg_toplevel);
         xdg_surface_destroy(app->xdg_surface);
     }
@@ -602,8 +618,11 @@ void app_destroy(struct app* const app)
 
     wl_compositor_destroy(app->wl_compositor);
     wl_seat_destroy(app->wl_seat);
-    wl_subcompositor_destroy(app->wl_subcompositor);
     wl_shm_destroy(app->wl_shm);
+
+    // TODO optional
+    wl_subcompositor_destroy(app->wl_subcompositor);
+    xdg_decoration_manager_destroy(app->xdg_decoration_manager);
     xdg_wm_base_destroy(app->xdg_wm_base);
 
     wl_registry_destroy(app->wl_registry);

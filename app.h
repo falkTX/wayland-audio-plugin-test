@@ -12,6 +12,16 @@
 extern "C" {
 #endif
 
+// unstable protocols
+#define XDG_TOPLEVEL_DECORATION_MODE_SERVER_SIDE ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE
+#define xdg_decoration_manager_destroy zxdg_decoration_manager_v1_destroy
+#define xdg_decoration_manager_interface zxdg_decoration_manager_v1_interface
+#define xdg_decoration_manager_get_toplevel_decoration zxdg_decoration_manager_v1_get_toplevel_decoration
+#define xdg_toplevel_decoration zxdg_toplevel_decoration_v1
+#define xdg_toplevel_decoration_destroy zxdg_toplevel_decoration_v1_destroy
+#define xdg_toplevel_decoration_interface zxdg_toplevel_decoration_v1_interface
+#define xdg_toplevel_decoration_set_mode zxdg_toplevel_decoration_v1_set_mode
+
 // --------------------------------------------------------------------------------------------------------------------
 
 struct egl {
@@ -31,9 +41,11 @@ struct app {
     struct wl_subcompositor* wl_subcompositor;
     struct wl_subsurface* wl_subsurface;
     struct wl_surface* wl_surface;
-    struct xdg_wm_base* xdg_wm_base;
+    struct xdg_decoration_manager* xdg_decoration_manager;
     struct xdg_surface* xdg_surface;
     struct xdg_toplevel* xdg_toplevel;
+    struct xdg_toplevel_decoration* xdg_toplevel_decoration;
+    struct xdg_wm_base* xdg_wm_base;
     struct egl egl;
     const char* name;
     bool closing;
