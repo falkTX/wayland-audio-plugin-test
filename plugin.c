@@ -106,32 +106,29 @@ static LV2UI_Handle lv2ui_instantiate(const LV2UI_Descriptor* const descriptor,
         /**/ if (strcmp(features[i]->URI, LV2_OPTIONS__options) == 0)
             options = features[i]->data;
         else if (strcmp(features[i]->URI, LV2_URID__map) == 0)
-            uridMap = (const LV2_URID_Map*)features[i]->data;
+            uridMap = features[i]->data;
         else if (strcmp(features[i]->URI, LV2_UI__parent) == 0)
             parent = features[i]->data;
     }
 
-    // host must either provide options (for ui-title) or parent
-    if (options == NULL && parent == NULL)
+    // host must provide options and URID map features
+    if (options == NULL || uridMap == NULL)
     {
-        fprintf(stderr, "Options feature missing (needed for show-interface), cannot continue!\n");
-        return NULL;
-    }
-
-    if (uridMap == NULL)
-    {
-        fprintf(stderr, "URID Map feature missing, cannot continue!\n");
+        fprintf(stderr, "LV2 features missing, cannot continue!\n");
         return NULL;
     }
 
     float scaleFactor = 1.0f;
     const char* title = NULL;
+    struct wl_display* wl_display = NULL;
+
     if (options != NULL)
     {
         const LV2_URID uridAtomFloat = uridMap->map(uridMap->handle, LV2_ATOM__Float);
         const LV2_URID uridAtomString = uridMap->map(uridMap->handle, LV2_ATOM__String);
         const LV2_URID uridScaleFactor = uridMap->map(uridMap->handle, LV2_UI__scaleFactor);
         const LV2_URID uridWindowTitle = uridMap->map(uridMap->handle, LV2_UI__windowTitle);
+        const LV2_URID uridWaylandDisplay = uridMap->map(uridMap->handle, "urn:wayland:display");
 
         for (int i = 0; options[i].key != 0; ++i)
         {
@@ -149,15 +146,24 @@ static LV2UI_Handle lv2ui_instantiate(const LV2UI_Descriptor* const descriptor,
                 else
                     fprintf(stderr, "Host provides windowTitle but has wrong value type\n");
             }
+            else if (options[i].key == uridWaylandDisplay)
+            {
+                wl_display = *(struct wl_display**)options[i].value;
+            }
 
             // TODO check if we can use transient window with xdg_toplevel_set_parent
         }
     }
 
+    if (parent != NULL && wl_display == NULL)
+    {
+        parent = NULL;
+        fprintf(stderr, "Host provides UI parent but not wayland display, which is required\n");
+    }
+
     struct ui* const ui = calloc(1, sizeof(struct ui));
     assert(ui != NULL);
 
-    struct wl_display* const wl_display = NULL; // TODO
     struct wl_surface* const wl_surface = parent;
 
     ui->app = app_init(wl_display, wl_surface, title, scaleFactor);

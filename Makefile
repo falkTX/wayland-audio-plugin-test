@@ -18,8 +18,8 @@ WAYLAND_PROTOCOLS_DIR = $(shell pkg-config --variable=pkgdatadir wayland-protoco
 WAYLAND_PROTOCOL_FILE_XDG_DECORATION = $(WAYLAND_PROTOCOLS_DIR)/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml
 WAYLAND_PROTOCOL_FILE_XDG_SHELL = $(WAYLAND_PROTOCOLS_DIR)/stable/xdg-shell/xdg-shell.xml
 
-TARGETS = wayland-audio-plugin-test wl-host
-# qt-host  wayland-audio-plugin-test.lv2/plugin.so
+TARGETS = gtk3-host gtk4-host wayland-audio-plugin-test wayland-audio-plugin-test.lv2/plugin.so wl-host
+# qt-host
 
 all: build
 
@@ -31,7 +31,13 @@ clean:
 run: wayland-audio-plugin-test
 	valgrind --leak-check=full ./wayland-audio-plugin-test
 
-qt-host: qt-host.cpp app.o proto/xdg-shell.o
+gtk3-host: gtk3-host.c app.o proto/xdg-decoration.o proto/xdg-shell.o
+	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs gtk+-wayland-3.0) -o $@
+
+gtk4-host: gtk4-host.c app.o proto/xdg-decoration.o proto/xdg-shell.o
+	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs gtk4-wayland) -o $@
+
+qt-host: qt-host.cpp app.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CXX) $^ $(CXXFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs Qt6WaylandClient Qt6Widgets) -o $@
 
 wayland-audio-plugin-test: app.o main.o proto/xdg-decoration.o proto/xdg-shell.o

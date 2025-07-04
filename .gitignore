@@ -1,5 +1,7 @@
 *.o
 *.so
+gtk3-host
+gtk4-host
 qt-host
 wayland-audio-plugin-test
 wl-host
