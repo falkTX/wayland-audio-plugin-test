@@ -29,7 +29,7 @@ run: wayland-audio-plugin-test
 	valgrind --leak-check=full ./wayland-audio-plugin-test
 
 qt-host: qt-host.cpp app.o proto/xdg-shell.o
-	$(CXX) $^ $(CXXFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs Qt6Widgets) -o $@
+	$(CXX) $^ $(CXXFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs Qt6WaylandClient Qt6Widgets) -o $@
 
 wayland-audio-plugin-test: app.o main.o proto/xdg-shell.o
 	$(CC) $^ $(LDFLAGS) -o $@
