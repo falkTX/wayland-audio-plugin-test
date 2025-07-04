@@ -64,7 +64,7 @@ int main()
     g_signal_connect_data(window, "destroy", gtk_ui_destroy, plugin, NULL, 0);
     g_timeout_add(30, gtk_ui_timeout, plugin);
 
-    gtk_widget_show(window);
+    gtk_window_present(window);
 
     while (g_list_model_get_n_items(gtk_window_get_toplevels()) > 0)
         g_main_context_iteration(NULL, true);
