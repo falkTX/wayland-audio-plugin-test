@@ -157,12 +157,13 @@ static LV2UI_Handle lv2ui_instantiate(const LV2UI_Descriptor* const descriptor,
     struct ui* const ui = calloc(1, sizeof(struct ui));
     assert(ui != NULL);
 
+    struct wl_display* const wl_display = NULL; // TODO
     struct wl_surface* const wl_surface = parent;
 
-    ui->app = app_init(wl_surface, title, scaleFactor);
+    ui->app = app_init(wl_display, wl_surface, title, scaleFactor);
     assert(ui->app != NULL);
 
-    *widget = app_get_subsurface(ui->app);
+    *widget = ui->app->wl_subsurface;
 
     return ui;
 

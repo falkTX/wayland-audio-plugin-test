@@ -1,9 +1,10 @@
 #!/usr/bin/env
 
-CFLAGS += -Wall -Wextra -Werror
+CFLAGS += -Wall -Wextra -Werror -Wno-incompatible-pointer-types
 CFLAGS += -std=gnu11
 CFLAGS += -Iproto
 CFLAGS += -fPIC
+CFLAGS += -O0 -g
 CFLAGS += $(shell pkg-config --cflags egl glesv2 wayland-client wayland-egl wayland-protocols)
 
 CXXFLAGS += -Wall -Wextra
@@ -16,7 +17,8 @@ LDFLAGS += $(shell pkg-config --libs egl glesv2 wayland-client wayland-egl wayla
 WAYLAND_PROTOCOLS_DIR = $(shell pkg-config --variable=pkgdatadir wayland-protocols)
 WAYLAND_PROTOCOL_FILE_XDG_SHELL = $(WAYLAND_PROTOCOLS_DIR)/stable/xdg-shell/xdg-shell.xml
 
-TARGETS = qt-host wayland-audio-plugin-test wayland-audio-plugin-test.lv2/plugin.so
+TARGETS = wl-host
+# qt-host wayland-audio-plugin-test wayland-audio-plugin-test.lv2/plugin.so
 
 all: build
 
@@ -36,6 +38,9 @@ wayland-audio-plugin-test: app.o main.o proto/xdg-shell.o
 
 wayland-audio-plugin-test.lv2/plugin.so: app.o plugin.o proto/xdg-shell.o
 	$(CC) $^ $(LDFLAGS) -shared -o $@
+
+wl-host: app.o wl-host.o proto/xdg-shell.o
+	$(CC) $^ $(LDFLAGS) -o $@
 
 %.o: %.c glview.h
 	$(CC) $< $(CFLAGS) -c -o $@
