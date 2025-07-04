@@ -1,0 +1,3 @@
+*.o
+wayland-audio-plugin-test
+proto/*.*
