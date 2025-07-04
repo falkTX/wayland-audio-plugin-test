@@ -4,15 +4,19 @@ CFLAGS += -Wall -Wextra -Werror
 CFLAGS += -std=gnu11
 CFLAGS += -Iproto
 CFLAGS += -fPIC
-CFLAGS += $(shell pkg-config --cflags egl glesv2 lv2 wayland-client wayland-egl wayland-protocols)
+CFLAGS += $(shell pkg-config --cflags egl glesv2 wayland-client wayland-egl wayland-protocols)
+
+CXXFLAGS += -Wall -Wextra
+CXXFLAGS += -std=gnu++17
+CXXFLAGS += $(shell pkg-config --cflags egl glesv2 wayland-client wayland-egl wayland-protocols)
 
 LDFLAGS += -Wl,-no-undefined
-LDFLAGS += $(shell pkg-config --libs egl glesv2 lv2 wayland-client wayland-egl wayland-protocols)
+LDFLAGS += $(shell pkg-config --libs egl glesv2 wayland-client wayland-egl wayland-protocols)
 
 WAYLAND_PROTOCOLS_DIR = $(shell pkg-config --variable=pkgdatadir wayland-protocols)
 WAYLAND_PROTOCOL_FILE_XDG_SHELL = $(WAYLAND_PROTOCOLS_DIR)/stable/xdg-shell/xdg-shell.xml
 
-TARGETS = wayland-audio-plugin-test wayland-audio-plugin-test.lv2/plugin.so
+TARGETS = qt-host wayland-audio-plugin-test wayland-audio-plugin-test.lv2/plugin.so
 
 all: build
 
@@ -23,6 +27,9 @@ clean:
 
 run: wayland-audio-plugin-test
 	valgrind --leak-check=full ./wayland-audio-plugin-test
+
+qt-host: qt-host.cpp app.o proto/xdg-shell.o
+	$(CXX) $^ $(CXXFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs Qt6Widgets) -o $@
 
 wayland-audio-plugin-test: app.o main.o proto/xdg-shell.o
 	$(CC) $^ $(LDFLAGS) -o $@

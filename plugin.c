@@ -149,6 +149,8 @@ static LV2UI_Handle lv2ui_instantiate(const LV2UI_Descriptor* const descriptor,
                 else
                     fprintf(stderr, "Host provides windowTitle but has wrong value type\n");
             }
+
+            // TODO check if we can use transient window with xdg_toplevel_set_parent
         }
     }
 

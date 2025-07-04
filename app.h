@@ -8,6 +8,10 @@
 #define INITIAL_WIDTH 300
 #define INITIAL_HEIGHT 300
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // --------------------------------------------------------------------------------------------------------------------
 
 struct egl {
@@ -59,3 +63,7 @@ void app_update(struct app* app);
 void app_destroy(struct app* app);
 
 // --------------------------------------------------------------------------------------------------------------------
+
+#ifdef __cplusplus
+}
+#endif

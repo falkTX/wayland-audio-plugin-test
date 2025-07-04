@@ -1,4 +1,5 @@
 *.o
 *.so
+qt-host
 wayland-audio-plugin-test
 proto/*.*
