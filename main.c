@@ -33,6 +33,7 @@ struct app {
     struct wl_shell_surface* wl_shell_surface;
 #endif
     struct wl_shm* wl_shm;
+    struct wl_subcompositor* wl_subcompositor;
     struct wl_surface* wl_surface;
     struct xdg_wm_base* xdg_wm_base;
     struct xdg_surface* xdg_surface;
@@ -81,6 +82,11 @@ static void wl_registry_global_announce(void* const data,
     {
         assert(app->wl_shm == NULL);
         app->wl_shm = wl_registry_bind(app->wl_registry, name, &wl_shm_interface, 1);
+    }
+    else if (strcmp(interface, wl_subcompositor_interface.name) == 0)
+    {
+        assert(app->wl_subcompositor == NULL);
+        app->wl_subcompositor = wl_registry_bind(app->wl_registry, name, &wl_subcompositor_interface, 1);
     }
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
@@ -476,6 +482,7 @@ int main()
     assert(app->wl_shell != NULL);
 #endif
     assert(app->wl_shm != NULL);
+    assert(app->wl_subcompositor != NULL);
     assert(app->xdg_wm_base != NULL);
 
     err = wl_seat_add_listener(app->wl_seat, &wl_seat_listener, app);
@@ -586,6 +593,7 @@ int main()
 #if 0
     wl_shell_destroy(app->wl_shell);
 #endif
+    wl_subcompositor_destroy(app->wl_subcompositor);
     wl_shm_destroy(app->wl_shm);
     xdg_wm_base_destroy(app->xdg_wm_base);
 
