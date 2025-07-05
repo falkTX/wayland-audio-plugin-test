@@ -2,7 +2,7 @@
 *.so
 gtk3-host
 gtk4-host
-qt-host
+qt6-host
 wayland-audio-plugin-test
 wl-host
 proto/*.*

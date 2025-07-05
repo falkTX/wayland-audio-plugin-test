@@ -1,3 +1,7 @@
+// Wayland audio plugin test
+// Copyright (C) 2025 Filipe Coelho <falktx@falktx.com>
+// SPDX-License-Identifier: ISC
+
 // ensure assert does its thing
 #undef NDEBUG
 #define DEBUG
@@ -507,7 +511,7 @@ struct app* app_init(struct wl_display* const wl_display,
         app->xdg_toplevel_decoration = xdg_decoration_manager_get_toplevel_decoration(app->xdg_decoration_manager, app->xdg_toplevel);
         assert(app->xdg_toplevel_decoration != NULL);
 
-        xdg_toplevel_decoration_set_mode(app->xdg_toplevel_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+        xdg_toplevel_decoration_set_mode(app->xdg_toplevel_decoration, XDG_TOPLEVEL_DECORATION_MODE_SERVER_SIDE);
         xdg_toplevel_set_title(app->xdg_toplevel, title);
     }
 

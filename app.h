@@ -1,3 +1,7 @@
+// Wayland audio plugin test
+// Copyright (C) 2025 Filipe Coelho <falktx@falktx.com>
+// SPDX-License-Identifier: ISC
+
 #pragma once
 
 #include <stdbool.h>
