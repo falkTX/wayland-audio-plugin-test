@@ -12,6 +12,10 @@
 
 #include "app.h"
 
+// TODO find these values dynamically
+#define GTK4_SHADOW_SIZE 23
+#define GTK4_TITLEBAR_HEIGHT 50
+
 // --------------------------------------------------------------------------------------------------------------------
 
 static void gtk_ui_destroy(void* const handle, struct app* const plugin)
@@ -35,8 +39,13 @@ int main()
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
+    // TODO find if compositor supports decorations
+    int extra_height = 0;
+    if (getenv("GNOME_SETUP_DISPLAY") != NULL)
+        extra_height += GTK4_TITLEBAR_HEIGHT;
+
     gtk_window_set_decorated(window, true);
-    gtk_window_set_default_size(window, INITIAL_WIDTH + 40, INITIAL_HEIGHT + 40);
+    gtk_window_set_default_size(window, INITIAL_WIDTH + 40, INITIAL_HEIGHT + 40 + extra_height);
     gtk_window_set_resizable(window, true);
     gtk_window_set_title(window, "gtk4-host");
 
@@ -63,7 +72,16 @@ int main()
 
     // move plugin surface to center
     if (plugin->wl_subsurface != NULL)
-        wl_subsurface_set_position(plugin->wl_subsurface, 20, 20);
+    {
+        int x = 20;
+        int y = 20;
+        if (!plugin->supports_decorations)
+        {
+            x += GTK4_SHADOW_SIZE;
+            y += GTK4_SHADOW_SIZE + GTK4_TITLEBAR_HEIGHT;
+        }
+        wl_subsurface_set_position(plugin->wl_subsurface, x, y);
+    }
 
     g_signal_connect_data(window, "destroy", gtk_ui_destroy, plugin, NULL, 0);
     g_timeout_add(30, gtk_ui_timeout, plugin);

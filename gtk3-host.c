@@ -12,6 +12,10 @@
 
 #include "app.h"
 
+// TODO find these values dynamically
+#define GTK3_SHADOW_SIZE 45
+#define GTK3_TITLEBAR_HEIGHT 50
+
 // --------------------------------------------------------------------------------------------------------------------
 
 static void gtk_ui_destroy(void* const handle, struct app* const plugin)
@@ -61,7 +65,16 @@ int main(int argc, char* argv[])
 
     // move plugin surface to center
     if (plugin->wl_subsurface != NULL)
-        wl_subsurface_set_position(plugin->wl_subsurface, 20, 20);
+    {
+        int x = 20;
+        int y = 20;
+        if (!plugin->supports_decorations)
+        {
+            x += GTK3_SHADOW_SIZE;
+            y += GTK3_SHADOW_SIZE + GTK3_TITLEBAR_HEIGHT;
+        }
+        wl_subsurface_set_position(plugin->wl_subsurface, x, y);
+    }
 
     g_signal_connect_data(window, "destroy", gtk_ui_destroy, plugin, NULL, 0);
     g_timeout_add(30, gtk_ui_timeout, plugin);

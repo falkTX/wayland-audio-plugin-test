@@ -32,28 +32,28 @@ clean:
 run: wayland-audio-plugin-test
 	valgrind --leak-check=full ./wayland-audio-plugin-test
 
-gtk3-host: gtk3-host.c app.o proto/xdg-decoration.o proto/xdg-shell.o
+gtk3-host: gtk3-host.c app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs gtk+-wayland-3.0) -o $@
 
-gtk4-host: gtk4-host.c app.o proto/xdg-decoration.o proto/xdg-shell.o
+gtk4-host: gtk4-host.c app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs gtk4-wayland) -o $@
 
-qt5-host: qt-host.cpp app.o proto/xdg-decoration.o proto/xdg-shell.o
+qt5-host: qt-host.cpp app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CXX) $^ $(CXXFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs Qt5WaylandClient Qt5Widgets) -o $@
 
-qt6-host: qt-host.cpp app.o proto/xdg-decoration.o proto/xdg-shell.o
+qt6-host: qt-host.cpp app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CXX) $^ $(CXXFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs Qt6WaylandClient Qt6Widgets) -o $@
 
-wayland-audio-plugin-test: app.o main.o proto/xdg-decoration.o proto/xdg-shell.o
+wayland-audio-plugin-test: app.o gtk-wayland-decoration.o main.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CC) $^ $(LDFLAGS) -o $@
 
-wayland-audio-plugin-test.lv2/plugin.so: app.o plugin.o proto/xdg-decoration.o proto/xdg-shell.o
+wayland-audio-plugin-test.lv2/plugin.so: app.o gtk-wayland-decoration.o plugin.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CC) $^ $(LDFLAGS) -shared -o $@
 
-wl-host: app.o wl-host.o proto/xdg-decoration.o proto/xdg-shell.o
+wl-host: app.o gtk-wayland-decoration.o wl-host.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CC) $^ $(LDFLAGS) -o $@
 
-%.o: %.c glview.h
+%.o: %.c
 	$(CC) $< $(CFLAGS) -c -o $@
 
 # extra protocol deps

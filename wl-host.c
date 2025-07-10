@@ -28,7 +28,7 @@ int main()
     plugin->name = "plugin";
 
     // move plugin surface to center
-    wl_subsurface_set_position(plugin->wl_subsurface, 150, 150);
+    wl_subsurface_set_position(plugin->wl_subsurface, INITIAL_WIDTH / 2, INITIAL_HEIGHT / 2);
 
     // these do nothing
     // wl_subsurface_place_below(plugin->wl_subsurface, app->wl_surface);

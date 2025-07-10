@@ -51,8 +51,9 @@ struct app {
     struct xdg_toplevel_decoration* xdg_toplevel_decoration;
     struct xdg_wm_base* xdg_wm_base;
     struct egl egl;
+    struct gtk_decoration* gtkdecor;
     const char* name;
-    bool closing, embed;
+    bool closing, embed, supports_decorations;
     int32_t width;
     int32_t height;
     float r, g, b;

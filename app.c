@@ -8,6 +8,7 @@
 #include <assert.h>
 
 #include "app.h"
+#include "gtk-wayland-decoration.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +52,12 @@ static void wl_registry_global_announce(struct app* const app,
             assert(app->wl_subcompositor == NULL);
             app->wl_subcompositor = wl_registry_bind(app->wl_registry, name, &wl_subcompositor_interface, 1);
         }
+        else if (strcmp(interface, xdg_decoration_manager_interface.name) == 0)
+        {
+            assert(app->xdg_decoration_manager == NULL);
+            // intentionally unused in embed views
+            app->supports_decorations = true;
+        }
     }
     else
     {
@@ -58,8 +65,8 @@ static void wl_registry_global_announce(struct app* const app,
         {
             assert(app->xdg_decoration_manager == NULL);
             app->xdg_decoration_manager = wl_registry_bind(app->wl_registry, name, &xdg_decoration_manager_interface, 1);
+            app->supports_decorations = true;
         }
-
         else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
         {
             assert(app->xdg_wm_base == NULL);
@@ -427,7 +434,7 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 // --------------------------------------------------------------------------------------------------------------------
 
 struct app* app_init(struct wl_display* const wl_display,
-                     struct wl_surface* const wl_surface,
+                     struct wl_surface* parent_wl_surface,
                      const char* const title,
                      const float scaleFactor)
 {
@@ -438,7 +445,7 @@ struct app* app_init(struct wl_display* const wl_display,
     app->r = app->g = 1.f;
     app->name = "testing";
 
-    if (wl_display == NULL || wl_surface == NULL)
+    if (wl_display == NULL || parent_wl_surface == NULL)
     {
         app->wl_display = wl_display_connect(NULL);
         assert(app->wl_display != NULL);
@@ -473,8 +480,58 @@ struct app* app_init(struct wl_display* const wl_display,
     else
     {
         assert(app->wl_subcompositor == NULL);
-        assert(app->xdg_decoration_manager != NULL);
         assert(app->xdg_wm_base != NULL);
+
+        // NOTE mutter and weston do not implement this one
+        if (app->xdg_decoration_manager == NULL)
+        {
+            // we really, really do not want to do our custom decorations that will look out of place everywhere..
+            // so here we restart the whole thing by and embed on a gtk app that does it for us.
+
+            wl_compositor_destroy(app->wl_compositor);
+            app->wl_compositor = NULL;
+            wl_seat_destroy(app->wl_seat);
+            app->wl_seat = NULL;
+            wl_shm_destroy(app->wl_shm);
+            app->wl_shm = NULL;
+            xdg_wm_base_destroy(app->xdg_wm_base);
+            app->xdg_wm_base = NULL;
+            wl_registry_destroy(app->wl_registry);
+            app->wl_registry = NULL;
+            wl_display_disconnect(app->wl_display);
+            app->wl_display = NULL;
+
+            app->gtkdecor = gtk_decoration_init(INITIAL_WIDTH * scaleFactor,
+                                                INITIAL_HEIGHT * scaleFactor,
+                                                false,
+                                                title);
+            assert(app->gtkdecor != NULL);
+
+            app->embed = true;
+            app->wl_display = app->gtkdecor->wl_display;
+
+            // repeat the same steps as above, but now embed
+            app->wl_registry = wl_display_get_registry(app->wl_display);
+            assert(app->wl_registry != NULL);
+
+            err = wl_registry_add_listener(app->wl_registry, &wl_registry_listener, app);
+            assert(err == 0);
+
+            // first block-wait to receive global announce events
+            err = wl_display_roundtrip(app->wl_display);
+            assert(err > 0);
+
+            // these must all be valid now
+            assert(app->wl_compositor != NULL);
+            assert(app->wl_seat != NULL);
+            assert(app->wl_shm != NULL);
+            assert(app->wl_subcompositor != NULL);
+            assert(app->xdg_decoration_manager == NULL);
+            assert(app->xdg_wm_base == NULL);
+
+            // parent surface comes from gtk decoration
+            parent_wl_surface = app->gtkdecor->wl_surface;
+        }
     }
 
     err = wl_seat_add_listener(app->wl_seat, &wl_seat_listener, app);
@@ -488,8 +545,12 @@ struct app* app_init(struct wl_display* const wl_display,
 
     if (app->embed)
     {
-        app->wl_subsurface = wl_subcompositor_get_subsurface(app->wl_subcompositor, app->wl_surface, wl_surface);
+        app->wl_subsurface = wl_subcompositor_get_subsurface(app->wl_subcompositor,
+                                                             app->wl_surface, parent_wl_surface);
         assert(app->wl_subsurface != NULL);
+
+        if (app->gtkdecor != NULL)
+            wl_subsurface_set_position(app->wl_subsurface, app->gtkdecor->offset.x, app->gtkdecor->offset.y);
     }
     else
     {
@@ -508,11 +569,14 @@ struct app* app_init(struct wl_display* const wl_display,
         err = xdg_toplevel_add_listener(app->xdg_toplevel, &xdg_toplevel_listener, app);
         assert(err == 0);
 
-        app->xdg_toplevel_decoration = xdg_decoration_manager_get_toplevel_decoration(app->xdg_decoration_manager, app->xdg_toplevel);
-        assert(app->xdg_toplevel_decoration != NULL);
+        if (app->xdg_decoration_manager != NULL)
+        {
+            app->xdg_toplevel_decoration = xdg_decoration_manager_get_toplevel_decoration(app->xdg_decoration_manager, app->xdg_toplevel);
+            assert(app->xdg_toplevel_decoration != NULL);
 
-        xdg_toplevel_decoration_set_mode(app->xdg_toplevel_decoration, XDG_TOPLEVEL_DECORATION_MODE_SERVER_SIDE);
-        xdg_toplevel_set_title(app->xdg_toplevel, title);
+            xdg_toplevel_decoration_set_mode(app->xdg_toplevel_decoration, XDG_TOPLEVEL_DECORATION_MODE_SERVER_SIDE);
+            xdg_toplevel_set_title(app->xdg_toplevel, title);
+        }
     }
 
     // commit so we can receive configure event
@@ -527,8 +591,8 @@ struct app* app_init(struct wl_display* const wl_display,
     assert(err == EGL_TRUE);
 
     app->egl.window = wl_egl_window_create(app->wl_surface,
-                                           (app->width ?: INITIAL_WIDTH) * scaleFactor,
-                                           (app->height ?: INITIAL_HEIGHT) * scaleFactor);
+                                           INITIAL_WIDTH * scaleFactor,
+                                           INITIAL_HEIGHT * scaleFactor);
     assert(app->egl.window != EGL_NO_SURFACE);
 
     EGLint num_configs;
@@ -576,13 +640,31 @@ struct app* app_init(struct wl_display* const wl_display,
 
 void app_run(struct app* const app)
 {
-    while (wl_display_dispatch(app->wl_display) != -1 && !app->closing);
+    if (app->gtkdecor != NULL)
+    {
+        while (!app->gtkdecor->closing && !app->closing)
+            gtk_decoration_idle(app->gtkdecor);
+    }
+    else
+    {
+        while (wl_display_dispatch(app->wl_display) != -1 && !app->closing);
+    }
 }
 
 void app_idle(struct app* const app)
 {
-    wl_display_dispatch_pending(app->wl_display);
-    wl_display_roundtrip(app->wl_display);
+    if (app->gtkdecor != NULL)
+    {
+        gtk_decoration_idle(app->gtkdecor);
+
+        if (app->gtkdecor->closing)
+            app->closing = true;
+    }
+    else
+    {
+        wl_display_dispatch_pending(app->wl_display);
+        wl_display_roundtrip(app->wl_display);
+    }
 }
 
 void app_resize(struct app* app, int width, int height)
@@ -631,7 +713,8 @@ void app_destroy(struct app* const app)
     else
     {
         assert(app->wl_subsurface == NULL);
-        xdg_toplevel_decoration_destroy(app->xdg_toplevel_decoration);
+        if (app->xdg_toplevel_decoration != NULL)
+            xdg_toplevel_decoration_destroy(app->xdg_toplevel_decoration);
         xdg_toplevel_destroy(app->xdg_toplevel);
         xdg_surface_destroy(app->xdg_surface);
     }
@@ -647,13 +730,16 @@ void app_destroy(struct app* const app)
     }
     else
     {
-        xdg_decoration_manager_destroy(app->xdg_decoration_manager);
+        if (app->xdg_decoration_manager != NULL)
+            xdg_decoration_manager_destroy(app->xdg_decoration_manager);
         xdg_wm_base_destroy(app->xdg_wm_base);
     }
 
     wl_registry_destroy(app->wl_registry);
 
-    if (!app->embed)
+    if (app->gtkdecor != NULL)
+        gtk_decoration_destroy(app->gtkdecor);
+    else if (!app->embed)
         wl_display_disconnect(app->wl_display);
 
     free(app);

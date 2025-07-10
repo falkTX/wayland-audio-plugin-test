@@ -70,7 +70,17 @@ public:
 
         // move plugin surface to center
         if (plugin->wl_subsurface != NULL)
-            wl_subsurface_set_position(plugin->wl_subsurface, 20, 20);
+        {
+            int x = 20;
+            int y = 20;
+            if (!plugin->supports_decorations)
+            {
+                // TODO fetch titlebar size
+                x += 0;
+                y += 0;
+            }
+            wl_subsurface_set_position(plugin->wl_subsurface, x, y);
+        }
 
         show();
     }
