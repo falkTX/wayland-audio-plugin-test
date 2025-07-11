@@ -12,15 +12,11 @@
 
 #include "app.h"
 
-// TODO find these values dynamically
-#define GTK4_SHADOW_SIZE 23
-#define GTK4_TITLEBAR_HEIGHT 50
-
 // --------------------------------------------------------------------------------------------------------------------
 
 static void gtk_ui_destroy(void* const handle, struct app* const plugin)
 {
-    app_destroy(plugin);
+    plugin->closing = true;
 
     // unused
     (void)handle;
@@ -32,22 +28,59 @@ static int gtk_ui_timeout(struct app* const plugin)
     return 1;
 }
 
+static void get_gtk_offsets(int* x, int* y, int* height)
+{
+    GtkWindow* const window = gtk_window_new();
+    assert(window != NULL);
+
+    GtkWidget* const header = gtk_header_bar_new();
+    assert(header != NULL);
+
+    // get initial window size
+    GtkRequisition _, req;
+    gtk_widget_get_preferred_size(window, &_, &req);
+
+    const int initial_width = req.width;
+    const int initial_height = req.height;
+
+    // add title bar
+    gtk_window_set_decorated(window, true);
+    gtk_window_set_default_size(window, initial_width, initial_height);
+    gtk_window_set_title(window, "test");
+    gtk_window_set_titlebar(window, header);
+
+    // position offset is (new size - old size) / 2
+    gtk_widget_get_preferred_size(window, &_, &req);
+    *x = (req.width - initial_width) / 2;
+    *y = (req.height - initial_height) / 2;
+
+    // also get header bar height, need to account for it during window creation
+    gtk_widget_get_preferred_size(header, &_, &req);
+    *height = req.height;
+
+    gtk_window_destroy(window);
+}
+
 int main()
 {
     gtk_init();
 
+    struct {
+        int x, y, height;
+    } offsets;
+    get_gtk_offsets(&offsets.x, &offsets.y, &offsets.height);
+
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
-    // TODO find if compositor supports decorations
-    int extra_height = 0;
-    if (getenv("GNOME_SETUP_DISPLAY") != NULL)
-        extra_height += GTK4_TITLEBAR_HEIGHT;
+    GtkWidget* const header = gtk_header_bar_new();
+    assert(header != NULL);
 
     gtk_window_set_decorated(window, true);
-    gtk_window_set_default_size(window, INITIAL_WIDTH + 40, INITIAL_HEIGHT + 40 + extra_height);
+    gtk_window_set_default_size(window, INITIAL_WIDTH + 40, INITIAL_HEIGHT + 40 + offsets.height);
     gtk_window_set_resizable(window, true);
     gtk_window_set_title(window, "gtk4-host");
+    gtk_window_set_titlebar(window, header);
 
     gtk_widget_realize(window);
 
@@ -75,10 +108,10 @@ int main()
     {
         int x = 20;
         int y = 20;
-        if (!plugin->supports_decorations)
+        // if (!plugin->supports_decorations)
         {
-            x += GTK4_SHADOW_SIZE;
-            y += GTK4_SHADOW_SIZE + GTK4_TITLEBAR_HEIGHT;
+            x += offsets.x;
+            y += offsets.y + offsets.height;
         }
         wl_subsurface_set_position(plugin->wl_subsurface, x, y);
     }
@@ -88,9 +121,10 @@ int main()
 
     gtk_window_present(window);
 
-    while (g_list_model_get_n_items(gtk_window_get_toplevels()) > 0)
+    while (g_list_model_get_n_items(gtk_window_get_toplevels()) > 0 && !plugin->closing)
         g_main_context_iteration(NULL, true);
 
+    app_destroy(plugin);
     return 0;
 }
 
