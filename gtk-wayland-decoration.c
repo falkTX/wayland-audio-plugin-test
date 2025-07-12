@@ -16,6 +16,7 @@
 static void gtk_ui_destroy(void* const handle, struct gtk_decoration* const gtkdecor)
 {
     gtkdecor->closing = true;
+    gtkdecor->gtkwindow = NULL;
 
     // unused
     (void)handle;
@@ -172,6 +173,8 @@ struct gtk_decoration* gtk3_decoration_init(const uint32_t width,
 
     gtk_widget_show_all(window);
 
+    gtkdecor->gtkver = 3;
+    gtkdecor->gtkwindow = window;
     return gtkdecor;
 }
 
@@ -232,6 +235,9 @@ struct gtk_decoration* gtk4_decoration_init(const uint32_t width,
     void* (*gtk_window_new)(void) = dlsym(NULL, "gtk_window_new");
     assert(gtk_window_new != NULL);
 
+    void (*gtk_window_present)(void*) = dlsym(NULL, "gtk_window_present");
+    assert(gtk_window_present != NULL);
+
     void (*gtk_window_set_decorated)(void*, int) = dlsym(NULL, "gtk_window_set_decorated");
     assert(gtk_window_set_decorated != NULL);
 
@@ -247,11 +253,12 @@ struct gtk_decoration* gtk4_decoration_init(const uint32_t width,
     void (*gtk_window_set_titlebar)(void*, void*) = dlsym(NULL, "gtk_window_set_titlebar");
     assert(gtk_window_set_titlebar != NULL);
 
-    void (*gtk_window_present)(void*) = dlsym(NULL, "gtk_window_present");
-    assert(gtk_window_present != NULL);
-
-    if (init)
+    static bool initialized = false;
+    if (init && !initialized)
+    {
+        initialized = true;
         gtk_init();
+    }
 
     // create a dummy gtk4 window so we can find the offset and header height
     int extrawidth, extraheight;
@@ -327,6 +334,8 @@ struct gtk_decoration* gtk4_decoration_init(const uint32_t width,
 
     gtk_window_present(window);
 
+    gtkdecor->gtkver = 4;
+    gtkdecor->gtkwindow = window;
     return gtkdecor;
 }
 
@@ -373,7 +382,25 @@ void gtk_decoration_idle(struct gtk_decoration* const gtkdecor)
 
 void gtk_decoration_destroy(struct gtk_decoration* const gtkdecor)
 {
-    dlclose(gtkdecor->lib);
+    if (gtkdecor->gtkwindow != NULL)
+    {
+        /**/ if (gtkdecor->gtkver == 3)
+        {
+            void (*gtk_widget_destroy)(void*) = dlsym(NULL, "gtk_widget_destroy");
+            assert(gtk_widget_destroy != NULL);
+
+            gtk_widget_destroy(gtkdecor->gtkwindow);
+        }
+        else if (gtkdecor->gtkver == 4)
+        {
+            void (*gtk_window_destroy)(void*) = dlsym(NULL, "gtk_window_destroy");
+            assert(gtk_window_destroy != NULL);
+
+            gtk_window_destroy(gtkdecor->gtkwindow);
+        }
+    }
+
+    // dlclose(gtkdecor->lib);
     // dlclose(gtkdecor->glib);
     free(gtkdecor);
 }

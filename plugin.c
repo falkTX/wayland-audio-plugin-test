@@ -90,7 +90,12 @@ const LV2_Descriptor* lv2_descriptor(const uint32_t index)
 // --------------------------------------------------------------------------------------------------------------------
 
 struct ui {
+    // NOTE created during show() if non-embed/top-level
     struct app* app;
+    // NOTE only used if non-embed/top-level
+    char* title;
+    float scaleFactor;
+    float r, g, b;
 };
 
 static LV2UI_Handle lv2ui_instantiate(const LV2UI_Descriptor* const descriptor,
@@ -170,10 +175,18 @@ static LV2UI_Handle lv2ui_instantiate(const LV2UI_Descriptor* const descriptor,
 
     struct wl_surface* const wl_surface = parent;
 
-    ui->app = app_init(wl_display, wl_surface, title, scaleFactor);
-    assert(ui->app != NULL);
+    if (wl_display != NULL && wl_surface != NULL)
+    {
+        ui->app = app_init(wl_display, wl_surface, title, scaleFactor);
+        assert(ui->app != NULL);
 
-    *widget = ui->app->wl_subsurface;
+        *widget = ui->app->wl_subsurface;
+    }
+    else
+    {
+        ui->title = strdup(title);
+        ui->scaleFactor = scaleFactor;
+    }
 
     return ui;
 
@@ -189,7 +202,14 @@ static void lv2ui_cleanup(const LV2UI_Handle handle)
 {
     struct ui* const ui = handle;
 
-    app_destroy(ui->app);
+    if (ui->app != NULL)
+    {
+        struct app* const app = ui->app;
+        ui->app = NULL;
+        app_destroy(app);
+    }
+
+    free(ui->title);
     free(ui);
 }
 
@@ -211,45 +231,76 @@ static void lv2ui_port_event(const LV2UI_Handle handle,
     switch (portIndex)
     {
     case 4:
-        ui->app->r = value;
+        if (ui->app != NULL)
+            ui->app->r = value;
+        else
+            ui->r = value;
         break;
+
     case 5:
-        ui->app->g = value;
+        if (ui->app != NULL)
+            ui->app->g = value;
+        else
+            ui->g = value;
         break;
+
     case 6:
-        ui->app->b = value;
+        if (ui->app != NULL)
+            ui->app->b = value;
+        else
+            ui->b = value;
         break;
     }
 
-    app_update(ui->app);
+    if (ui->app != NULL)
+        app_update(ui->app);
 }
 
 static int lv2ui_idle(LV2UI_Handle handle)
 {
     struct ui* const ui = handle;
 
-    app_idle(ui->app);
-    return ui->app->closing ? 1 : 0;
+    if (ui->app != NULL)
+    {
+        app_idle(ui->app);
+        return ui->app->closing ? 1 : 0;
+    }
+
+    return 1;
 }
 
 static int lv2ui_show(LV2UI_Handle handle)
 {
     struct ui* const ui = handle;
 
-    return 0;
+    assert(ui->app == NULL);
 
-    // TODO
-    (void)ui;
+    ui->app = app_init(NULL, NULL, ui->title, ui->scaleFactor);
+    assert(ui->app != NULL);
+
+    ui->app->r = ui->r;
+    ui->app->g = ui->g;
+    ui->app->b = ui->b;
+    app_update(ui->app);
+
+    return 0;
 }
 
 static int lv2ui_hide(LV2UI_Handle handle)
 {
     struct ui* const ui = handle;
 
-    return 0;
+    assert(ui->app != NULL);
 
-    // TODO
-    (void)ui;
+    ui->r = ui->app->r;
+    ui->g = ui->app->g;
+    ui->b = ui->app->b;
+
+    struct app* const app = ui->app;
+    ui->app = NULL;
+    app_destroy(app);
+
+    return 0;
 }
 
 static const void* lv2ui_extension_data(const char* const uri)

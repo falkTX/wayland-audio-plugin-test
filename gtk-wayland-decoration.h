@@ -16,6 +16,8 @@ struct gtk_decoration {
         int x, y;
     } offset;
     bool closing;
+    int gtkver;
+    void* gtkwindow;
 };
 
 struct gtk_decoration* gtk_decoration_init(uint32_t width, uint32_t height, bool resizable, const char* title);

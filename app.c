@@ -662,10 +662,10 @@ void app_idle(struct app* const app)
 {
     if (app->gtkdecor != NULL)
     {
-        gtk_decoration_idle(app->gtkdecor);
-
         if (app->gtkdecor->closing)
             app->closing = true;
+        else
+            gtk_decoration_idle(app->gtkdecor);
     }
     else
     {
