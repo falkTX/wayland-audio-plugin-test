@@ -18,7 +18,7 @@
 
 // --------------------------------------------------------------------------------------------------------------------
 
-static void get_gtk_offsets(int* x, int* y, int* width, int* height, double *scale_factor)
+static void get_gtk_offsets(int* x, int* y, double *scale_factor)
 {
 #ifdef TEST_CUSTOM_TITLE_BAR
     GtkWindow* const window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -26,9 +26,6 @@ static void get_gtk_offsets(int* x, int* y, int* width, int* height, double *sca
 
     GtkWidget* const header = gtk_header_bar_new();
     assert(header != NULL);
-
-    GtkStyleContext* const style = gtk_widget_get_style_context(header);
-    assert(style != NULL);
 
     // *scale_factor = gtk_widget_get_scale_factor(window);
     // NOTE no direct fractional scaling API available
@@ -58,14 +55,11 @@ static void get_gtk_offsets(int* x, int* y, int* width, int* height, double *sca
     gtk_widget_show(header);
     gtk_widget_get_preferred_size(header, &_, &req);
     gtk_widget_hide(window);
-
     *y += req.height;
-    *width = 0;
-    *height = req.height;
 
     gtk_widget_destroy(window);
 #else
-    *x = *y = *width = *height = 0;
+    *x = *y = 0;
     *scale_factor = 1.0;
 #endif
 }
@@ -96,26 +90,29 @@ int main(int argc, char* argv[])
     gtk_init(&argc, &argv);
 
     struct {
-        int x, y, width, height;
+        int x, y;
     } offsets;
     double scale_factor;
-    get_gtk_offsets(&offsets.x, &offsets.y, &offsets.width, &offsets.height, &scale_factor);
+    get_gtk_offsets(&offsets.x, &offsets.y, &scale_factor);
 
     GtkWindow* const window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     assert(window != NULL);
 
-    gtk_window_resize(window,
-                      (INITIAL_WIDTH + PADDING * 2) * scale_factor,
-                      (INITIAL_HEIGHT + PADDING * 2) * scale_factor);
     gtk_window_set_decorated(window, true);
+    gtk_window_set_default_size(window,
+                                (INITIAL_WIDTH + PADDING * 2) * scale_factor,
+                                (INITIAL_HEIGHT + PADDING * 2) * scale_factor);
     gtk_window_set_resizable(window, true);
-    gtk_window_set_title(window, "gtk3-host");
 
 #ifdef TEST_CUSTOM_TITLE_BAR
     GtkWidget* const header = gtk_header_bar_new();
     assert(header != NULL);
 
+    gtk_header_bar_set_show_close_button(header, true);
+    gtk_header_bar_set_title(header, "gtk3-host");
     gtk_window_set_titlebar(window, header);
+#else
+    gtk_window_set_title(window, "gtk3-host");
 #endif
 
     gtk_widget_realize(window);
