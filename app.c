@@ -22,6 +22,10 @@
 
 // #define TEST_CUSTOM_TITLE_BAR
 
+#define LOG(...)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 // --------------------------------------------------------------------------------------------------------------------
 
 static void wl_registry_global_announce(struct app* const app,
@@ -30,7 +34,7 @@ static void wl_registry_global_announce(struct app* const app,
                                         const char* const interface,
                                         const uint32_t version)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, \"%s\", %u)\n", app->name, __func__, app, wl_registry, name, interface, version);
+    LOG("[%s] %s(%p, %p, %u, \"%s\", %u)\n", app->name, __func__, app, wl_registry, name, interface, version);
 
     /**/ if (strcmp(interface, wl_compositor_interface.name) == 0)
     {
@@ -86,7 +90,7 @@ static void wl_registry_global_remove(struct app* const app,
                                       struct wl_registry* const wl_registry,
                                       const uint32_t name)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u)\n", app->name, __func__, app, wl_registry, name);
+    LOG("[%s] %s(%p, %p, %u)\n", app->name, __func__, app, wl_registry, name);
 }
 
 static const struct wl_registry_listener wl_registry_listener = {
@@ -102,7 +106,7 @@ static void wl_keyboard_keymap(struct app* const app,
                                const int32_t fd,
                                const uint32_t size)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %d, %u)\n", app->name, __func__, app, wl_keyboard, format, fd, size);
+    LOG("[%s] %s(%p, %p, %u, %d, %u)\n", app->name, __func__, app, wl_keyboard, format, fd, size);
 }
 
 static void wl_keyboard_enter(struct app* const app,
@@ -111,7 +115,7 @@ static void wl_keyboard_enter(struct app* const app,
                               struct wl_surface* const surface,
                               struct wl_array* const keys)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %p, %p)\n", app->name, __func__, app, wl_keyboard, serial, surface, keys);
+    LOG("[%s] %s(%p, %p, %u, %p, %p)\n", app->name, __func__, app, wl_keyboard, serial, surface, keys);
 }
 
 static void wl_keyboard_leave(struct app* const app,
@@ -119,7 +123,7 @@ static void wl_keyboard_leave(struct app* const app,
                               const uint32_t serial,
                               struct wl_surface* const surface)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %p)\n", app->name, __func__, app, wl_keyboard, serial, surface);
+    LOG("[%s] %s(%p, %p, %u, %p)\n", app->name, __func__, app, wl_keyboard, serial, surface);
 }
 
 static void wl_keyboard_key(struct app* const app,
@@ -129,7 +133,7 @@ static void wl_keyboard_key(struct app* const app,
                             const uint32_t key,
                             const uint32_t state)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %u, %u, %u)\n", app->name, __func__, app, wl_keyboard, serial, time, key, state);
+    LOG("[%s] %s(%p, %p, %u, %u, %u, %u)\n", app->name, __func__, app, wl_keyboard, serial, time, key, state);
 }
 
 static void wl_keyboard_modifiers(struct app* const app,
@@ -140,7 +144,7 @@ static void wl_keyboard_modifiers(struct app* const app,
                                   const uint32_t mods_locked,
                                   const uint32_t group)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %u, %u, %u, %u)\n", app->name, __func__, app, wl_keyboard, serial, mods_depressed, mods_latched, mods_locked, group);
+    LOG("[%s] %s(%p, %p, %u, %u, %u, %u, %u)\n", app->name, __func__, app, wl_keyboard, serial, mods_depressed, mods_latched, mods_locked, group);
 }
 
 static void wl_keyboard_repeat_info(struct app* const app,
@@ -148,7 +152,7 @@ static void wl_keyboard_repeat_info(struct app* const app,
                                     const int32_t rate,
                                     const int32_t delay)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %d, %d)\n", app->name, __func__, app, wl_keyboard, rate, delay);
+    LOG("[%s] %s(%p, %p, %d, %d)\n", app->name, __func__, app, wl_keyboard, rate, delay);
 }
 
 static const struct wl_keyboard_listener wl_keyboard_listener = {
@@ -169,7 +173,7 @@ static void wl_pointer_enter(struct app* const app,
                              const wl_fixed_t surface_x,
                              const wl_fixed_t surface_y)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %p, %f, %f)\n", app->name, __func__, app, wl_pointer, serial, surface, wl_fixed_to_double(surface_x), wl_fixed_to_double(surface_y));
+    LOG("[%s] %s(%p, %p, %u, %p, %f, %f)\n", app->name, __func__, app, wl_pointer, serial, surface, wl_fixed_to_double(surface_x), wl_fixed_to_double(surface_y));
 }
 
 static void wl_pointer_leave(struct app* const app,
@@ -177,7 +181,7 @@ static void wl_pointer_leave(struct app* const app,
                              const uint32_t serial,
                              struct wl_surface* const surface)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %p)\n", app->name, __func__, app, wl_pointer, serial, surface);
+    LOG("[%s] %s(%p, %p, %u, %p)\n", app->name, __func__, app, wl_pointer, serial, surface);
 }
 
 static void wl_pointer_motion(struct app* const app,
@@ -186,7 +190,7 @@ static void wl_pointer_motion(struct app* const app,
                               const wl_fixed_t surface_x,
                               const wl_fixed_t surface_y)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %f, %f)\n", app->name, __func__, app, wl_pointer, time, wl_fixed_to_double(surface_x), wl_fixed_to_double(surface_y));
+    LOG("[%s] %s(%p, %p, %u, %f, %f)\n", app->name, __func__, app, wl_pointer, time, wl_fixed_to_double(surface_x), wl_fixed_to_double(surface_y));
 }
 
 static void wl_pointer_button(struct app* const app,
@@ -196,7 +200,7 @@ static void wl_pointer_button(struct app* const app,
                               const uint32_t button,
                               const uint32_t state)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %u, %u, %u)\n", app->name, __func__, app, wl_pointer, serial, time, button, state);
+    LOG("[%s] %s(%p, %p, %u, %u, %u, %u)\n", app->name, __func__, app, wl_pointer, serial, time, button, state);
 }
 
 static void wl_pointer_axis(struct app* const app,
@@ -205,19 +209,19 @@ static void wl_pointer_axis(struct app* const app,
                             const uint32_t axis,
                             const wl_fixed_t value)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %u, %f)\n", app->name, __func__, app, wl_pointer, time, axis, wl_fixed_to_double(value));
+    LOG("[%s] %s(%p, %p, %u, %u, %f)\n", app->name, __func__, app, wl_pointer, time, axis, wl_fixed_to_double(value));
 }
 
 static void wl_pointer_frame(struct app* const app, struct wl_pointer* const wl_pointer)
 {
-    fprintf(stderr, "[%s] %s(%p, %p)\n", app->name, __func__, app, wl_pointer);
+    LOG("[%s] %s(%p, %p)\n", app->name, __func__, app, wl_pointer);
 }
 
 static void wl_pointer_axis_source(struct app* const app,
                                    struct wl_pointer* const wl_pointer,
                                    const uint32_t axis_source)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u)\n", app->name, __func__, app, wl_pointer, axis_source);
+    LOG("[%s] %s(%p, %p, %u)\n", app->name, __func__, app, wl_pointer, axis_source);
 }
 
 static void wl_pointer_axis_stop(struct app* const app,
@@ -225,7 +229,7 @@ static void wl_pointer_axis_stop(struct app* const app,
                                  const uint32_t time,
                                  const uint32_t axis)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %u)\n", app->name, __func__, app, wl_pointer, time, axis);
+    LOG("[%s] %s(%p, %p, %u, %u)\n", app->name, __func__, app, wl_pointer, time, axis);
 }
 
 static void wl_pointer_axis_discrete(struct app* const app,
@@ -233,7 +237,7 @@ static void wl_pointer_axis_discrete(struct app* const app,
                                      const uint32_t axis,
                                      const int32_t discrete)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %d)\n", app->name, __func__, app, wl_pointer, axis, discrete);
+    LOG("[%s] %s(%p, %p, %u, %d)\n", app->name, __func__, app, wl_pointer, axis, discrete);
 }
 
 static void wl_pointer_axis_value120(struct app* const app,
@@ -241,7 +245,7 @@ static void wl_pointer_axis_value120(struct app* const app,
                                      const uint32_t axis,
                                      const int32_t value120)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %d)\n", app->name, __func__, app, wl_pointer, axis, value120);
+    LOG("[%s] %s(%p, %p, %u, %d)\n", app->name, __func__, app, wl_pointer, axis, value120);
 }
 
 #ifdef WL_POINTER_AXIS_RELATIVE_DIRECTION_SINCE_VERSION
@@ -250,7 +254,7 @@ static void wl_pointer_axis_relative_direction(struct app* const app,
                                                const uint32_t axis,
                                                const uint32_t direction)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u, %u)\n", app->name, __func__, app, wl_pointer, axis, direction);
+    LOG("[%s] %s(%p, %p, %u, %u)\n", app->name, __func__, app, wl_pointer, axis, direction);
 }
 #endif
 
@@ -274,7 +278,7 @@ struct wl_pointer_listener wl_pointer_listener = {
 
 static void wl_seat_capabilities(struct app* const app, struct wl_seat* const wl_seat, const uint32_t capabilities)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u)\n", app->name, __func__, app, wl_seat, capabilities);
+    LOG("[%s] %s(%p, %p, %u)\n", app->name, __func__, app, wl_seat, capabilities);
 
     if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD)
     {
@@ -292,7 +296,7 @@ static void wl_seat_name(struct app* const app,
                          struct wl_seat* const wl_seat,
                          const char* const name)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, \"%s\")\n", app->name, __func__, app, wl_seat, name);
+    LOG("[%s] %s(%p, %p, \"%s\")\n", app->name, __func__, app, wl_seat, name);
 }
 
 static const struct wl_seat_listener wl_seat_listener = {
@@ -306,27 +310,27 @@ static void wl_surface_enter(struct app* const app,
                              struct wl_surface* const wl_surface,
                              struct wl_output* const wl_output)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %p)\n", app->name, __func__, app, wl_surface, wl_output);
+    LOG("[%s] %s(%p, %p, %p)\n", app->name, __func__, app, wl_surface, wl_output);
 }
 
 static void wl_surface_leave(struct app* const app,
                              struct wl_surface* const wl_surface,
                              struct wl_output* const wl_output)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %p)\n", app->name, __func__, app, wl_surface, wl_output);
+    LOG("[%s] %s(%p, %p, %p)\n", app->name, __func__, app, wl_surface, wl_output);
 }
 
 #ifdef WL_SURFACE_PREFERRED_BUFFER_SCALE_SINCE_VERSION
 static void wl_surface_preferred_buffer_scale(struct app* const app, struct wl_surface* const wl_surface, const int32_t factor)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %d)\n", app->name, __func__, app, wl_surface, factor);
+    LOG("[%s] %s(%p, %p, %d)\n", app->name, __func__, app, wl_surface, factor);
 }
 #endif
 
 #ifdef WL_SURFACE_PREFERRED_BUFFER_TRANSFORM_SINCE_VERSION
 static void wl_surface_preferred_buffer_transform(struct app* const app, struct wl_surface* const wl_surface, const uint32_t transform)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u)\n", app->name, __func__, app, wl_surface, transform);
+    LOG("[%s] %s(%p, %p, %u)\n", app->name, __func__, app, wl_surface, transform);
 }
 #endif
 
@@ -347,7 +351,7 @@ static void xdg_wm_base_ping(struct app* const app,
                              struct xdg_wm_base* const xdg_wm_base,
                              const uint32_t serial)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u)\n", app->name, __func__, app, xdg_wm_base, serial);
+    LOG("[%s] %s(%p, %p, %u)\n", app->name, __func__, app, xdg_wm_base, serial);
     xdg_wm_base_pong(xdg_wm_base, serial);
 }
 
@@ -361,7 +365,7 @@ static void xdg_surface_configure(struct app* const app,
                                   struct xdg_surface* const xdg_surface,
                                   const uint32_t serial)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %u)\n", app->name, __func__, app, xdg_surface, serial);
+    LOG("[%s] %s(%p, %p, %u)\n", app->name, __func__, app, xdg_surface, serial);
 
     if (app->width == 0 || app->height == 0)
         return;
@@ -397,7 +401,7 @@ static void xdg_toplevel_configure(struct app* const app,
                                    int32_t height,
                                    struct wl_array* const states)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %d, %d, %p)\n", app->name, __func__, app, xdg_toplevel, width, height, states);
+    LOG("[%s] %s(%p, %p, %d, %d, %p)\n", app->name, __func__, app, xdg_toplevel, width, height, states);
 
     if (width == 0 || height == 0)
         return;
@@ -411,7 +415,7 @@ static void xdg_toplevel_configure(struct app* const app,
 
 static void xdg_toplevel_close(struct app* const app, struct xdg_toplevel* const xdg_toplevel)
 {
-    fprintf(stderr, "[%s] %s(%p, %p)\n", app->name, __func__, app, xdg_toplevel);
+    LOG("[%s] %s(%p, %p)\n", app->name, __func__, app, xdg_toplevel);
 
     app->closing = true;
 }
@@ -421,14 +425,14 @@ static void xdg_toplevel_configure_bounds(struct app* const app,
                                           const int32_t width,
                                           const int32_t height)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %d, %d)\n", app->name, __func__, app, xdg_toplevel, width, height);
+    LOG("[%s] %s(%p, %p, %d, %d)\n", app->name, __func__, app, xdg_toplevel, width, height);
 }
 
 static void xdg_toplevel_wm_capabilities(struct app* const app,
                                          struct xdg_toplevel* const xdg_toplevel,
                                          struct wl_array* const capabilities)
 {
-    fprintf(stderr, "[%s] %s(%p, %p, %p)\n", app->name, __func__, app, xdg_toplevel, capabilities);
+    LOG("[%s] %s(%p, %p, %p)\n", app->name, __func__, app, xdg_toplevel, capabilities);
 }
 
 static const struct xdg_toplevel_listener xdg_toplevel_listener = {
@@ -437,6 +441,10 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
     xdg_toplevel_configure_bounds,
     xdg_toplevel_wm_capabilities,
 };
+
+// --------------------------------------------------------------------------------------------------------------------
+
+#pragma GCC diagnostic pop
 
 // --------------------------------------------------------------------------------------------------------------------
 

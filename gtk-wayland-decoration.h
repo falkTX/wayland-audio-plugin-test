@@ -8,8 +8,9 @@
 #include <stdint.h>
 
 struct gtk_decoration {
-    void* lib;
-    // void* glib;
+    void* gobject;
+    void* glib;
+    void* gtklib;
     struct wl_display* wl_display;
     struct wl_surface* wl_surface;
     struct {

@@ -12,6 +12,9 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
+#define RTLD_FLAGS (RTLD_NOW|RTLD_NODELETE)
 
 static void gtk_ui_destroy(void* const handle, struct gtk_decoration* const gtkdecor)
 {
@@ -22,7 +25,10 @@ static void gtk_ui_destroy(void* const handle, struct gtk_decoration* const gtkd
     (void)handle;
 }
 
-struct gtk_decoration* gtk3_decoration_init(const uint32_t width,
+struct gtk_decoration* gtk3_decoration_init(void* const gobject,
+                                            void* const glib,
+                                            void* const gtklib,
+                                            const uint32_t width,
                                             const uint32_t height,
                                             const bool resizable,
                                             const char* const title,
@@ -31,70 +37,71 @@ struct gtk_decoration* gtk3_decoration_init(const uint32_t width,
     struct gtk_decoration* const gtkdecor = calloc(1, sizeof(struct gtk_decoration));
     assert(gtkdecor != NULL);
 
-    gtkdecor->lib = dlopen("libgtk-3.so.0", RTLD_NOW|RTLD_GLOBAL);
-    assert(gtkdecor->lib != NULL);
+    gtkdecor->glib = glib;
+    gtkdecor->gobject = gobject;
+    gtkdecor->gtklib = gtklib;
 
-    void* (*g_signal_connect_data)(void*, const char*, void*, void*, void*, int) = dlsym(NULL, "g_signal_connect_data");
+    void* (*g_signal_connect_data)(void*, const char*, void*, void*, void*, int) = dlsym(gobject, "g_signal_connect_data");
     assert(g_signal_connect_data != NULL);
 
-    void* (*gdk_wayland_display_get_wl_display)(void*) = dlsym(NULL, "gdk_wayland_display_get_wl_display");
+    void* (*gdk_wayland_display_get_wl_display)(void*) = dlsym(gtklib, "gdk_wayland_display_get_wl_display");
     assert(gdk_wayland_display_get_wl_display != NULL);
 
-    void* (*gdk_wayland_window_get_wl_surface)(void*) = dlsym(NULL, "gdk_wayland_window_get_wl_surface");
+    void* (*gdk_wayland_window_get_wl_surface)(void*) = dlsym(gtklib, "gdk_wayland_window_get_wl_surface");
     assert(gdk_wayland_window_get_wl_surface != NULL);
 
-    void* (*gdk_window_get_display)(void*) = dlsym(NULL, "gdk_window_get_display");
+    void* (*gdk_window_get_display)(void*) = dlsym(gtklib, "gdk_window_get_display");
     assert(gdk_window_get_display != NULL);
 
-    void* (*gtk_header_bar_new)(void) = dlsym(NULL, "gtk_header_bar_new");
+    void* (*gtk_header_bar_new)(void) = dlsym(gtklib, "gtk_header_bar_new");
     assert(gtk_header_bar_new != NULL);
 
-    void (*gtk_header_bar_set_show_close_button)(void*, int) = dlsym(NULL, "gtk_header_bar_set_show_close_button");
+    void (*gtk_header_bar_set_show_close_button)(void*, int) = dlsym(gtklib, "gtk_header_bar_set_show_close_button");
     assert(gtk_header_bar_set_show_close_button != NULL);
 
-    void (*gtk_header_bar_set_title)(void*, const char*) = dlsym(NULL, "gtk_header_bar_set_title");
+    void (*gtk_header_bar_set_title)(void*, const char*) = dlsym(gtklib, "gtk_header_bar_set_title");
     assert(gtk_header_bar_set_title != NULL);
 
-    void (*gtk_init)(int*, char***) = dlsym(NULL, "gtk_init");
+    void (*gtk_init)(int*, char***) = dlsym(gtklib, "gtk_init");
     assert(gtk_init != NULL);
 
-    void (*gtk_widget_destroy)(void*) = dlsym(NULL, "gtk_widget_destroy");
+    void (*gtk_widget_destroy)(void*) = dlsym(gtklib, "gtk_widget_destroy");
     assert(gtk_widget_destroy != NULL);
 
-    void (*gtk_widget_get_preferred_size)(void*, int*, int*) = dlsym(NULL, "gtk_widget_get_preferred_size");
+    void (*gtk_widget_get_preferred_size)(void*, int*, int*) = dlsym(gtklib, "gtk_widget_get_preferred_size");
     assert(gtk_widget_get_preferred_size != NULL);
 
-    void* (*gtk_widget_get_window)(void*) = dlsym(NULL, "gtk_widget_get_window");
+    void* (*gtk_widget_get_window)(void*) = dlsym(gtklib, "gtk_widget_get_window");
     assert(gtk_widget_get_window != NULL);
 
-    void (*gtk_widget_hide)(void*) = dlsym(NULL, "gtk_widget_hide");
+    void (*gtk_widget_hide)(void*) = dlsym(gtklib, "gtk_widget_hide");
     assert(gtk_widget_hide != NULL);
 
-    void (*gtk_widget_realize)(void*) = dlsym(NULL, "gtk_widget_realize");
+    void (*gtk_widget_realize)(void*) = dlsym(gtklib, "gtk_widget_realize");
     assert(gtk_widget_realize != NULL);
 
-    void (*gtk_widget_show)(void*) = dlsym(NULL, "gtk_widget_show");
+    void (*gtk_widget_show)(void*) = dlsym(gtklib, "gtk_widget_show");
     assert(gtk_widget_show != NULL);
 
-    void (*gtk_widget_show_all)(void*) = dlsym(NULL, "gtk_widget_show_all");
+    void (*gtk_widget_show_all)(void*) = dlsym(gtklib, "gtk_widget_show_all");
     assert(gtk_widget_show_all != NULL);
 
-    struct GtkWindow* (*gtk_window_new)(int) = dlsym(NULL, "gtk_window_new");
+    struct GtkWindow* (*gtk_window_new)(int) = dlsym(gtklib, "gtk_window_new");
     assert(gtk_window_new != NULL);
 
-    void (*gtk_window_set_decorated)(void*, int) = dlsym(NULL, "gtk_window_set_decorated");
+    void (*gtk_window_set_decorated)(void*, int) = dlsym(gtklib, "gtk_window_set_decorated");
     assert(gtk_window_set_decorated != NULL);
 
-    void (*gtk_window_set_default_size)(void*, int, int) = dlsym(NULL, "gtk_window_set_default_size");
+    void (*gtk_window_set_default_size)(void*, int, int) = dlsym(gtklib, "gtk_window_set_default_size");
     assert(gtk_window_set_default_size != NULL);
 
-    void (*gtk_window_set_resizable)(void*, int) = dlsym(NULL, "gtk_window_set_resizable");
+    void (*gtk_window_set_resizable)(void*, int) = dlsym(gtklib, "gtk_window_set_resizable");
     assert(gtk_window_set_resizable != NULL);
 
-    void (*gtk_window_set_title)(void*, const char*) = dlsym(NULL, "gtk_window_set_title");
+    void (*gtk_window_set_title)(void*, const char*) = dlsym(gtklib, "gtk_window_set_title");
     assert(gtk_window_set_title != NULL);
 
-    void (*gtk_window_set_titlebar)(void*, void*) = dlsym(NULL, "gtk_window_set_titlebar");
+    void (*gtk_window_set_titlebar)(void*, void*) = dlsym(gtklib, "gtk_window_set_titlebar");
     assert(gtk_window_set_titlebar != NULL);
 
     if (init)
@@ -178,7 +185,10 @@ struct gtk_decoration* gtk3_decoration_init(const uint32_t width,
     return gtkdecor;
 }
 
-struct gtk_decoration* gtk4_decoration_init(const uint32_t width,
+struct gtk_decoration* gtk4_decoration_init(void* const gobject,
+                                            void* const glib,
+                                            void* const gtklib,
+                                            const uint32_t width,
                                             const uint32_t height,
                                             const bool resizable,
                                             const char* const title,
@@ -187,78 +197,72 @@ struct gtk_decoration* gtk4_decoration_init(const uint32_t width,
     struct gtk_decoration* const gtkdecor = calloc(1, sizeof(struct gtk_decoration));
     assert(gtkdecor != NULL);
 
-    // gtkdecor->glib = dlopen("libglib-2.0.so.0", RTLD_NOW|RTLD_GLOBAL);
-    // assert(gtkdecor->glib != NULL);
+    gtkdecor->glib = glib;
+    gtkdecor->gobject = gobject;
+    gtkdecor->gtklib = gtklib;
 
-    gtkdecor->lib = dlopen("libgtk-4.so.1", RTLD_NOW|RTLD_GLOBAL) ?: dlopen("libgtk-4.so.0", RTLD_NOW|RTLD_GLOBAL);
-    assert(gtkdecor->lib != NULL);
-
-    void* (*g_signal_connect_data)(void*, const char*, void*, void*, void*, int) = dlsym(NULL, "g_signal_connect_data");
+    void* (*g_signal_connect_data)(void*, const char*, void*, void*, void*, int) = dlsym(gobject, "g_signal_connect_data");
     assert(g_signal_connect_data != NULL);
 
-    void* (*gdk_wayland_display_get_wl_display)(void*) = dlsym(NULL, "gdk_wayland_display_get_wl_display");
+    void* (*gdk_wayland_display_get_wl_display)(void*) = dlsym(gtklib, "gdk_wayland_display_get_wl_display");
     assert(gdk_wayland_display_get_wl_display != NULL);
 
-    void* (*gdk_wayland_surface_get_wl_surface)(void*) = dlsym(NULL, "gdk_wayland_surface_get_wl_surface");
+    void* (*gdk_wayland_surface_get_wl_surface)(void*) = dlsym(gtklib, "gdk_wayland_surface_get_wl_surface");
     assert(gdk_wayland_surface_get_wl_surface != NULL);
 
-    void* (*gtk_header_bar_new)(void) = dlsym(NULL, "gtk_header_bar_new");
+    void* (*gtk_header_bar_new)(void) = dlsym(gtklib, "gtk_header_bar_new");
     assert(gtk_header_bar_new != NULL);
 
-    void (*gtk_init)(void) = dlsym(NULL, "gtk_init");
+    void (*gtk_init)(void) = dlsym(gtklib, "gtk_init");
     assert(gtk_init != NULL);
 
-    void* (*gtk_native_get_surface)(void*) = dlsym(NULL, "gtk_native_get_surface");
+    void* (*gtk_native_get_surface)(void*) = dlsym(gtklib, "gtk_native_get_surface");
     assert(gtk_native_get_surface != NULL);
 
-    void (*gtk_style_context_get_border)(void*, void*) = dlsym(NULL, "gtk_style_context_get_border");
+    void (*gtk_style_context_get_border)(void*, void*) = dlsym(gtklib, "gtk_style_context_get_border");
     assert(gtk_style_context_get_border != NULL);
 
-    void* (*gtk_widget_get_display)(void*) = dlsym(NULL, "gtk_widget_get_display");
+    void* (*gtk_widget_get_display)(void*) = dlsym(gtklib, "gtk_widget_get_display");
     assert(gtk_widget_get_display != NULL);
 
-    void* (*gtk_widget_get_native)(void*) = dlsym(NULL, "gtk_widget_get_native");
+    void* (*gtk_widget_get_native)(void*) = dlsym(gtklib, "gtk_widget_get_native");
     assert(gtk_widget_get_native != NULL);
 
-    void (*gtk_widget_get_preferred_size)(void*, int*, int*) = dlsym(NULL, "gtk_widget_get_preferred_size");
+    void (*gtk_widget_get_preferred_size)(void*, int*, int*) = dlsym(gtklib, "gtk_widget_get_preferred_size");
     assert(gtk_widget_get_preferred_size != NULL);
 
-    void* (*gtk_widget_get_style_context)(void*) = dlsym(NULL, "gtk_widget_get_style_context");
+    void* (*gtk_widget_get_style_context)(void*) = dlsym(gtklib, "gtk_widget_get_style_context");
     assert(gtk_widget_get_style_context != NULL);
 
-    void (*gtk_widget_realize)(void*) = dlsym(NULL, "gtk_widget_realize");
+    void (*gtk_widget_realize)(void*) = dlsym(gtklib, "gtk_widget_realize");
     assert(gtk_widget_realize != NULL);
 
-    void (*gtk_window_destroy)(void*) = dlsym(NULL, "gtk_window_destroy");
+    void (*gtk_window_destroy)(void*) = dlsym(gtklib, "gtk_window_destroy");
     assert(gtk_window_destroy != NULL);
 
-    void* (*gtk_window_new)(void) = dlsym(NULL, "gtk_window_new");
+    void* (*gtk_window_new)(void) = dlsym(gtklib, "gtk_window_new");
     assert(gtk_window_new != NULL);
 
-    void (*gtk_window_present)(void*) = dlsym(NULL, "gtk_window_present");
+    void (*gtk_window_present)(void*) = dlsym(gtklib, "gtk_window_present");
     assert(gtk_window_present != NULL);
 
-    void (*gtk_window_set_decorated)(void*, int) = dlsym(NULL, "gtk_window_set_decorated");
+    void (*gtk_window_set_decorated)(void*, int) = dlsym(gtklib, "gtk_window_set_decorated");
     assert(gtk_window_set_decorated != NULL);
 
-    void (*gtk_window_set_default_size)(void*, int, int) = dlsym(NULL, "gtk_window_set_default_size");
+    void (*gtk_window_set_default_size)(void*, int, int) = dlsym(gtklib, "gtk_window_set_default_size");
     assert(gtk_window_set_default_size != NULL);
 
-    void (*gtk_window_set_resizable)(void*, int) = dlsym(NULL, "gtk_window_set_resizable");
+    void (*gtk_window_set_resizable)(void*, int) = dlsym(gtklib, "gtk_window_set_resizable");
     assert(gtk_window_set_resizable != NULL);
 
-    void (*gtk_window_set_title)(void*, const char*) = dlsym(NULL, "gtk_window_set_title");
+    void (*gtk_window_set_title)(void*, const char*) = dlsym(gtklib, "gtk_window_set_title");
     assert(gtk_window_set_title != NULL);
 
-    void (*gtk_window_set_titlebar)(void*, void*) = dlsym(NULL, "gtk_window_set_titlebar");
+    void (*gtk_window_set_titlebar)(void*, void*) = dlsym(gtklib, "gtk_window_set_titlebar");
     assert(gtk_window_set_titlebar != NULL);
 
-    static bool initialized = false;
-    if (init && !initialized)
-    {
-        initialized = true;
+    if (init)
         gtk_init();
-    }
 
     // create a dummy gtk4 window so we can find the offset and header height
     int extrawidth, extraheight;
@@ -344,40 +348,87 @@ struct gtk_decoration* gtk_decoration_init(const uint32_t width,
                                            const bool resizable,
                                            const char* const title)
 {
-    const char* (*gtk_version_check)(int, int, int) = dlsym(NULL, "gtk_version_check");
+    void* const glib = dlopen("libglib-2.0.so.0", RTLD_FLAGS);
+    assert(glib != NULL);
 
-    if (gtk_version_check != NULL)
+    void* const gobject = dlopen("libgobject-2.0.so.0", RTLD_FLAGS);
+    assert(gobject != NULL);
+
+    const char* (*g_type_name)(unsigned long) = dlsym(gobject, "g_type_name");
+    assert(g_type_name != NULL);
+
+    unsigned long (*g_type_from_name)(const char*) = dlsym(gobject, "g_type_from_name");
+    assert(g_type_from_name != NULL);
+
+    int gtkver = 0;
+    void* gtklib = NULL;
+
+    // this type is only available for Gtk4
+    const unsigned long GdkWaylandToplevel_type = g_type_from_name("GdkWaylandToplevel");
+    if (GdkWaylandToplevel_type != 0)
     {
-        const char* check;
-
-        check = gtk_version_check(3, 0, 0);
-        if (check != NULL)
+        // make sure everything is ok first!
+        const char* const GdkWaylandToplevel_name = g_type_name(GdkWaylandToplevel_type);
+        if (GdkWaylandToplevel_name != NULL && strncmp(GdkWaylandToplevel_name, "GdkWaylandToplevel", 19) == 0)
         {
-            fprintf(stderr, "detected gtk3 under current process: %s\n", check);
-            return gtk3_decoration_init(width, height, resizable, title, false);
-        }
+            gtklib = dlopen("libgtk-4.so.1", RTLD_FLAGS) ?:
+                     dlopen("libgtk-4.so.0", RTLD_FLAGS) ?:
+                     dlopen("libgtk-4.so", RTLD_FLAGS);
 
-        check = gtk_version_check(4, 0, 0);
-        if (check != NULL)
-        {
-            fprintf(stderr, "detected gtk4 under current process: %s\n", check);
-            return gtk4_decoration_init(width, height, resizable, title, false);
+            if (gtklib != NULL)
+            {
+                fprintf(stderr, "[gtk-wayland-decoration] auto-detected gtk4!\n");
+                gtkver = 4;
+            }
         }
     }
 
-    fprintf(stderr, "using gtk4 based decoration as fallback\n");
-    return gtk4_decoration_init(width, height, resizable, title, true);
+    // TODO find a type unique in Gtk3
+
+    if (gtkver != 0)
+    {
+        // auto-detection is a success, so gtk has been initialized before
+        switch (gtkver)
+        {
+        case 3:
+            return gtk3_decoration_init(gobject, glib, gtklib, width, height, resizable, title, false);
+        case 4:
+            return gtk4_decoration_init(gobject, glib, gtklib, width, height, resizable, title, false);
+        }
+    }
+
+    // auto-detection failed, try gtk4 first
+    gtklib = dlopen("libgtk-4.so.1", RTLD_FLAGS) ?:
+             dlopen("libgtk-4.so.0", RTLD_FLAGS) ?:
+             dlopen("libgtk-4.so", RTLD_FLAGS);
+
+    if (gtklib != NULL)
+    {
+        fprintf(stderr, "[gtk-wayland-decoration] using gtk4 based decoration as fallback\n");
+        return gtk4_decoration_init(gobject, glib, gtklib, width, height, resizable, title, true);
+    }
+
+    // try gtk3 last
+    gtklib = dlopen("libgtk-3.so.0", RTLD_FLAGS) ?:
+             dlopen("libgtk-3.so", RTLD_FLAGS);
+
+    if (gtklib != NULL)
+    {
+        fprintf(stderr, "[gtk-wayland-decoration] using gtk3 based decoration as fallback\n");
+        return gtk3_decoration_init(gobject, glib, gtklib, width, height, resizable, title, true);
+    }
+
+    fprintf(stderr, "[gtk-wayland-decoration] failed to load any gtk for fallback window decorations\n");
+    return NULL;
 }
 
 void gtk_decoration_idle(struct gtk_decoration* const gtkdecor)
 {
-    int (*g_main_context_iteration)(void*, int) = dlsym(NULL, "g_main_context_iteration");
+    // gtkdecor->glib
+    int (*g_main_context_iteration)(void*, int) = dlsym(gtkdecor->glib, "g_main_context_iteration");
     assert(g_main_context_iteration != NULL);
 
     g_main_context_iteration(NULL, true);
-
-    // unused
-    (void)gtkdecor;
 }
 
 void gtk_decoration_destroy(struct gtk_decoration* const gtkdecor)
@@ -386,21 +437,25 @@ void gtk_decoration_destroy(struct gtk_decoration* const gtkdecor)
     {
         /**/ if (gtkdecor->gtkver == 3)
         {
-            void (*gtk_widget_destroy)(void*) = dlsym(NULL, "gtk_widget_destroy");
+            void (*gtk_widget_destroy)(void*) = dlsym(gtkdecor->gtklib, "gtk_widget_destroy");
             assert(gtk_widget_destroy != NULL);
 
             gtk_widget_destroy(gtkdecor->gtkwindow);
         }
         else if (gtkdecor->gtkver == 4)
         {
-            void (*gtk_window_destroy)(void*) = dlsym(NULL, "gtk_window_destroy");
+            void (*gtk_window_destroy)(void*) = dlsym(gtkdecor->gtklib, "gtk_window_destroy");
             assert(gtk_window_destroy != NULL);
 
             gtk_window_destroy(gtkdecor->gtkwindow);
         }
     }
 
-    // dlclose(gtkdecor->lib);
-    // dlclose(gtkdecor->glib);
+    // glib and gtk stuff is not meant to be unloaded, this is just cleanup
+    // we always use RTLD_NODELETE
+    dlclose(gtkdecor->gtklib);
+    dlclose(gtkdecor->glib);
+    dlclose(gtkdecor->gobject);
+
     free(gtkdecor);
 }
