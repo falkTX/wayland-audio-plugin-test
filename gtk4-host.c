@@ -14,27 +14,17 @@
 
 // --------------------------------------------------------------------------------------------------------------------
 
-static void gtk_ui_destroy(void* const handle, struct app* const plugin)
-{
-    plugin->closing = true;
-
-    // unused
-    (void)handle;
-}
-
-static int gtk_ui_timeout(struct app* const plugin)
-{
-    app_idle(plugin);
-    return 1;
-}
-
-static void get_gtk_offsets(int* x, int* y, int* height)
+static void get_gtk_offsets(int* x, int* y, int* height, double *scale_factor)
 {
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
     GtkWidget* const header = gtk_header_bar_new();
     assert(header != NULL);
+
+    // *scale_factor = gtk_widget_get_scale_factor(window);
+    // NOTE no direct fractional scaling API available
+    *scale_factor = 1;
 
     // get initial window size
     GtkRequisition _, req;
@@ -61,6 +51,24 @@ static void get_gtk_offsets(int* x, int* y, int* height)
     gtk_window_destroy(window);
 }
 
+// --------------------------------------------------------------------------------------------------------------------
+
+static void gtk_ui_destroy(void* const handle, struct app* const plugin)
+{
+    plugin->closing = true;
+
+    // unused
+    (void)handle;
+}
+
+static int gtk_ui_timeout(struct app* const plugin)
+{
+    app_idle(plugin);
+    return 1;
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
 int main()
 {
     gtk_init();
@@ -68,19 +76,18 @@ int main()
     struct {
         int x, y, height;
     } offsets;
-    get_gtk_offsets(&offsets.x, &offsets.y, &offsets.height);
+    double scale_factor;
+    get_gtk_offsets(&offsets.x, &offsets.y, &offsets.height, &scale_factor);
 
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
-    GtkWidget* const header = gtk_header_bar_new();
-    assert(header != NULL);
-
     gtk_window_set_decorated(window, true);
-    gtk_window_set_default_size(window, INITIAL_WIDTH + 40, INITIAL_HEIGHT + 40 + offsets.height);
+    gtk_window_set_default_size(window,
+                                (INITIAL_WIDTH + 40) * scale_factor,
+                                (INITIAL_HEIGHT + 40) * scale_factor + offsets.height);
     gtk_window_set_resizable(window, true);
     gtk_window_set_title(window, "gtk4-host");
-    gtk_window_set_titlebar(window, header);
 
     gtk_widget_realize(window);
 
@@ -99,16 +106,16 @@ int main()
     struct wl_surface* const wl_surface = gdk_wayland_surface_get_wl_surface(gsurface);
     assert(wl_surface != NULL);
 
-    struct app* const plugin = app_init(wl_display, wl_surface, "plugin", 1.0f);
+    struct app* const plugin = app_init(wl_display, wl_surface, "plugin", scale_factor);
     assert(plugin != NULL);
     plugin->name = "plugin";
 
     // move plugin surface to center
     if (plugin->wl_subsurface != NULL)
     {
-        int x = 20;
-        int y = 20;
-        // if (!plugin->supports_decorations)
+        int x = 20 * scale_factor;
+        int y = 20 * scale_factor;
+        if (!plugin->supports_decorations)
         {
             x += offsets.x;
             y += offsets.y + offsets.height;
