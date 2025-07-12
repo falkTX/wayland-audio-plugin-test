@@ -12,15 +12,23 @@
 
 #include "app.h"
 
+// #define TEST_CUSTOM_TITLE_BAR
+
+#define PADDING 20
+
 // --------------------------------------------------------------------------------------------------------------------
 
-static void get_gtk_offsets(int* x, int* y, int* height, double *scale_factor)
+static void get_gtk_offsets(int* x, int* y, int* width, int* height, double *scale_factor)
 {
+#ifdef TEST_CUSTOM_TITLE_BAR
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
     GtkWidget* const header = gtk_header_bar_new();
     assert(header != NULL);
+
+    GtkStyleContext* const style = gtk_widget_get_style_context(header);
+    assert(style != NULL);
 
     // *scale_factor = gtk_widget_get_scale_factor(window);
     // NOTE no direct fractional scaling API available
@@ -39,16 +47,24 @@ static void get_gtk_offsets(int* x, int* y, int* height, double *scale_factor)
     gtk_window_set_title(window, "test");
     gtk_window_set_titlebar(window, header);
 
-    // position offset is (new size - old size) / 2
+    // position offset is (new size - old size) / 2 - borders
+    GtkBorder border;
+    gtk_style_context_get_border(style, &border);
     gtk_widget_get_preferred_size(window, &_, &req);
-    *x = (req.width - initial_width) / 2;
-    *y = (req.height - initial_height) / 2;
+    *x = (req.width - initial_width) / 2 - border.top;
+    *y = (req.height - initial_height) / 2 - border.top - border.bottom;
 
     // also get header bar height, need to account for it during window creation
     gtk_widget_get_preferred_size(header, &_, &req);
+    *y += req.height;
+    *width = 0;
     *height = req.height;
 
     gtk_window_destroy(window);
+#else
+    *x = *y = *width = *height = 0;
+    *scale_factor = 1.0;
+#endif
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -74,20 +90,27 @@ int main()
     gtk_init();
 
     struct {
-        int x, y, height;
+        int x, y, width, height;
     } offsets;
     double scale_factor;
-    get_gtk_offsets(&offsets.x, &offsets.y, &offsets.height, &scale_factor);
+    get_gtk_offsets(&offsets.x, &offsets.y, &offsets.width, &offsets.height, &scale_factor);
 
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
     gtk_window_set_decorated(window, true);
     gtk_window_set_default_size(window,
-                                (INITIAL_WIDTH + 40) * scale_factor,
-                                (INITIAL_HEIGHT + 40) * scale_factor + offsets.height);
+                                (INITIAL_WIDTH + PADDING * 2) * scale_factor + offsets.width,
+                                (INITIAL_HEIGHT + PADDING * 2) * scale_factor + offsets.height);
     gtk_window_set_resizable(window, true);
     gtk_window_set_title(window, "gtk4-host");
+
+#ifdef TEST_CUSTOM_TITLE_BAR
+    GtkWidget* const header = gtk_header_bar_new();
+    assert(header != NULL);
+
+    gtk_window_set_titlebar(window, header);
+#endif
 
     gtk_widget_realize(window);
 
@@ -113,12 +136,12 @@ int main()
     // move plugin surface to center
     if (plugin->wl_subsurface != NULL)
     {
-        int x = 20 * scale_factor;
-        int y = 20 * scale_factor;
+        int x = PADDING * scale_factor;
+        int y = PADDING * scale_factor;
         if (!plugin->supports_decorations)
         {
             x += offsets.x;
-            y += offsets.y + offsets.height;
+            y += offsets.y;
         }
         wl_subsurface_set_position(plugin->wl_subsurface, x, y);
     }

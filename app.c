@@ -20,6 +20,8 @@
 #include "proto/xdg-decoration.h"
 #include "proto/xdg-shell.h"
 
+// #define TEST_CUSTOM_TITLE_BAR
+
 // --------------------------------------------------------------------------------------------------------------------
 
 static void wl_registry_global_announce(struct app* const app,
@@ -52,22 +54,27 @@ static void wl_registry_global_announce(struct app* const app,
             assert(app->wl_subcompositor == NULL);
             app->wl_subcompositor = wl_registry_bind(app->wl_registry, name, &wl_subcompositor_interface, 1);
         }
+       #ifndef TEST_CUSTOM_TITLE_BAR
         else if (strcmp(interface, xdg_decoration_manager_interface.name) == 0)
         {
             assert(app->xdg_decoration_manager == NULL);
             // intentionally unused in embed views
             app->supports_decorations = true;
         }
+       #endif
     }
     else
     {
+       #ifndef TEST_CUSTOM_TITLE_BAR
         /**/ if (strcmp(interface, xdg_decoration_manager_interface.name) == 0)
         {
             assert(app->xdg_decoration_manager == NULL);
             app->xdg_decoration_manager = wl_registry_bind(app->wl_registry, name, &xdg_decoration_manager_interface, 1);
             app->supports_decorations = true;
         }
-        else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
+        else
+       #endif
+        if (strcmp(interface, xdg_wm_base_interface.name) == 0)
         {
             assert(app->xdg_wm_base == NULL);
             app->xdg_wm_base = wl_registry_bind(app->wl_registry, name, &xdg_wm_base_interface, 1);

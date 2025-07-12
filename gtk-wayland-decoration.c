@@ -123,7 +123,40 @@ struct gtk_decoration* gtk4_decoration_init(const uint32_t width,
     void* (*g_signal_connect_data)(void*, const char*, void*, void*, void*, int) = dlsym(NULL, "g_signal_connect_data");
     assert(g_signal_connect_data != NULL);
 
-    struct GtkWindow* (*gtk_window_new)(void) = dlsym(NULL, "gtk_window_new");
+    void* (*gdk_wayland_display_get_wl_display)(void*) = dlsym(NULL, "gdk_wayland_display_get_wl_display");
+    assert(gdk_wayland_display_get_wl_display != NULL);
+
+    void* (*gdk_wayland_surface_get_wl_surface)(void*) = dlsym(NULL, "gdk_wayland_surface_get_wl_surface");
+    assert(gdk_wayland_surface_get_wl_surface != NULL);
+
+    void* (*gtk_header_bar_new)(void) = dlsym(NULL, "gtk_header_bar_new");
+    assert(gtk_header_bar_new != NULL);
+
+    void* (*gtk_native_get_surface)(void*) = dlsym(NULL, "gtk_native_get_surface");
+    assert(gtk_native_get_surface != NULL);
+
+    void (*gtk_style_context_get_border)(void*, void*) = dlsym(NULL, "gtk_style_context_get_border");
+    assert(gtk_style_context_get_border != NULL);
+
+    void* (*gtk_widget_get_display)(void*) = dlsym(NULL, "gtk_widget_get_display");
+    assert(gtk_widget_get_display != NULL);
+
+    void* (*gtk_widget_get_native)(void*) = dlsym(NULL, "gtk_widget_get_native");
+    assert(gtk_widget_get_native != NULL);
+
+    void* (*gtk_widget_get_style_context)(void*) = dlsym(NULL, "gtk_widget_get_style_context");
+    assert(gtk_widget_get_style_context != NULL);
+
+    void (*gtk_widget_get_preferred_size)(void*, int*, int*) = dlsym(NULL, "gtk_widget_get_preferred_size");
+    assert(gtk_widget_get_preferred_size != NULL);
+
+    void (*gtk_widget_realize)(void*) = dlsym(NULL, "gtk_widget_realize");
+    assert(gtk_widget_realize != NULL);
+
+    void (*gtk_window_destroy)(void*) = dlsym(NULL, "gtk_window_destroy");
+    assert(gtk_window_destroy != NULL);
+
+    void* (*gtk_window_new)(void) = dlsym(NULL, "gtk_window_new");
     assert(gtk_window_new != NULL);
 
     void (*gtk_window_set_decorated)(void*, int) = dlsym(NULL, "gtk_window_set_decorated");
@@ -138,26 +171,11 @@ struct gtk_decoration* gtk4_decoration_init(const uint32_t width,
     void (*gtk_window_set_title)(void*, const char*) = dlsym(NULL, "gtk_window_set_title");
     assert(gtk_window_set_title != NULL);
 
-    void (*gtk_widget_realize)(void*) = dlsym(NULL, "gtk_widget_realize");
-    assert(gtk_widget_realize != NULL);
+    void (*gtk_window_set_titlebar)(void*, void*) = dlsym(NULL, "gtk_window_set_titlebar");
+    assert(gtk_window_set_titlebar != NULL);
 
     void (*gtk_window_present)(void*) = dlsym(NULL, "gtk_window_present");
     assert(gtk_window_present != NULL);
-
-    void* (*gtk_widget_get_display)(void*) = dlsym(NULL, "gtk_widget_get_display");
-    assert(gtk_widget_get_display != NULL);
-
-    void* (*gtk_widget_get_native)(void*) = dlsym(NULL, "gtk_widget_get_native");
-    assert(gtk_widget_get_native != NULL);
-
-    void* (*gtk_native_get_surface)(void*) = dlsym(NULL, "gtk_native_get_surface");
-    assert(gtk_native_get_surface != NULL);
-
-    void* (*gdk_wayland_display_get_wl_display)(void*) = dlsym(NULL, "gdk_wayland_display_get_wl_display");
-    assert(gdk_wayland_display_get_wl_display != NULL);
-
-    void* (*gdk_wayland_surface_get_wl_surface)(void*) = dlsym(NULL, "gdk_wayland_surface_get_wl_surface");
-    assert(gdk_wayland_surface_get_wl_surface != NULL);
 
     if (init)
     {
@@ -167,13 +185,58 @@ struct gtk_decoration* gtk4_decoration_init(const uint32_t width,
         gtk_init();
     }
 
+    // create a dummy gtk4 window so we can find the offset and header height
+    int extrawidth, extraheight;
+    {
+        struct GtkWindow* const window = gtk_window_new();
+        assert(window != NULL);
+
+        struct GtkWidget* const header = gtk_header_bar_new();
+        assert(header != NULL);
+
+        struct GtkStyleContext* const style = gtk_widget_get_style_context(header);
+        assert(style != NULL);
+
+        // get initial window size
+        int size[4];
+        gtk_widget_get_preferred_size(window, size, size + 2);
+
+        const int initial_width = size[2];
+        const int initial_height = size[3];
+
+        // add title bar
+        gtk_window_set_decorated(window, true);
+        gtk_window_set_default_size(window, initial_width, initial_height);
+        gtk_window_set_title(window, "test");
+        gtk_window_set_titlebar(window, header);
+
+        // position offset is (new size - old size) / 2 - borders
+        int16_t border[4];
+        gtk_style_context_get_border(style, border);
+        gtk_widget_get_preferred_size(window, size, size + 2);
+        gtkdecor->offset.x = (size[2] - initial_width) / 2 - border[2];
+        gtkdecor->offset.y = (size[3] - initial_height) / 2 - border[2] - border[3];
+
+        // also get header bar height, need to account for it during window creation
+        gtk_widget_get_preferred_size(header, size, size + 2);
+        gtkdecor->offset.y += size[3];
+        extrawidth = 0;
+        extraheight = size[3];
+
+        gtk_window_destroy(window);
+    }
+
     struct GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
+    struct GtkWidget* const header = gtk_header_bar_new();
+    assert(header != NULL);
+
     gtk_window_set_decorated(window, true);
-    gtk_window_set_default_size(window, width, height + GTK4_TITLEBAR_HEIGHT);
+    gtk_window_set_default_size(window, width + extrawidth, height + extraheight);
     gtk_window_set_resizable(window, resizable);
     gtk_window_set_title(window, title);
+    gtk_window_set_titlebar(window, header);
 
     gtk_widget_realize(window);
 
@@ -195,10 +258,6 @@ struct gtk_decoration* gtk4_decoration_init(const uint32_t width,
     g_signal_connect_data(window, "destroy", gtk_ui_destroy, gtkdecor, NULL, 0);
 
     gtk_window_present(window);
-
-    // TODO find these values dynamically
-    gtkdecor->offset.x = GTK4_SHADOW_SIZE;
-    gtkdecor->offset.y = GTK4_TITLEBAR_HEIGHT + GTK4_SHADOW_SIZE;
 
     return gtkdecor;
 }
