@@ -35,12 +35,9 @@ static void get_gtk_offsets(int* x, int* y, double *scale_factor)
     GtkRequisition _, req;
     gtk_widget_get_preferred_size(window, &_, &req);
 
-    const int initial_width = req.width;
-    const int initial_height = req.height;
-
     // add title bar
     gtk_window_set_decorated(window, true);
-    gtk_window_set_default_size(window, initial_width, initial_height);
+    gtk_window_set_default_size(window, req.width, req.height);
     gtk_window_set_title(window, "test");
     gtk_window_set_titlebar(window, header);
 
@@ -49,12 +46,12 @@ static void get_gtk_offsets(int* x, int* y, double *scale_factor)
     gtk_widget_show(window);
     gtk_widget_get_preferred_size(window, &_, &req);
     gtk_widget_hide(window);
-    *x = *y = (req.height - initial_height) / 2;
+    *x = *y = (req.height - req.width) / 2;
 
     // also get header bar height, need to account for it during window creation
     gtk_widget_show(header);
     gtk_widget_get_preferred_size(header, &_, &req);
-    gtk_widget_hide(window);
+    gtk_widget_hide(header);
     *y += req.height;
 
     gtk_widget_destroy(window);

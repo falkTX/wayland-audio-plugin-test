@@ -123,12 +123,9 @@ struct gtk_decoration* gtk3_decoration_init(void* const gobject,
         int size[4];
         gtk_widget_get_preferred_size(window, size, size + 2);
 
-        const int initial_width = size[2];
-        const int initial_height = size[3];
-
         // add title bar
         gtk_window_set_decorated(window, true);
-        gtk_window_set_default_size(window, initial_width, initial_height);
+        gtk_window_set_default_size(window, size[2], size[3]);
         gtk_window_set_title(window, "test");
         gtk_window_set_titlebar(window, header);
 
@@ -137,12 +134,12 @@ struct gtk_decoration* gtk3_decoration_init(void* const gobject,
         gtk_widget_show(window);
         gtk_widget_get_preferred_size(window, size, size + 2);
         gtk_widget_hide(window);
-        gtkdecor->offset.x = gtkdecor->offset.y = (size[3] - initial_height) / 2;
+        gtkdecor->offset.x = gtkdecor->offset.y = (size[3] - size[2]) / 2;
 
         // also get header bar height
         gtk_widget_show(header);
         gtk_widget_get_preferred_size(header, size, size + 2);
-        gtk_widget_hide(window);
+        gtk_widget_hide(header);
         gtkdecor->offset.y += size[3];
 
         gtk_widget_destroy(window);
@@ -383,7 +380,24 @@ struct gtk_decoration* gtk_decoration_init(const uint32_t width,
         }
     }
 
-    // TODO find a type unique in Gtk3
+    // check if another kind of Gtk has been loaded, it's likely Gtk3
+    const unsigned long GdkEvent_type = g_type_from_name("GdkEvent");
+    if (GdkEvent_type != 0)
+    {
+        // make sure everything is ok first!
+        const char* const GdkEvent_name = g_type_name(GdkEvent_type);
+        if (GdkEvent_name != NULL && strncmp(GdkEvent_name, "GdkEvent", 9) == 0)
+        {
+            gtklib = dlopen("libgtk-3.so.0", RTLD_FLAGS) ?:
+                     dlopen("libgtk-3.so", RTLD_FLAGS);
+
+            if (gtklib != NULL)
+            {
+                fprintf(stderr, "[gtk-wayland-decoration] auto-detected gtk3!\n");
+                gtkver = 3;
+            }
+        }
+    }
 
     if (gtkver != 0)
     {
