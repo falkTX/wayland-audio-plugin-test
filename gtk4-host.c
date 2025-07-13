@@ -126,6 +126,9 @@ int main()
     struct wl_display* const wl_display = gdk_wayland_display_get_wl_display(gdisplay);
     assert(wl_display != NULL);
 
+    const EGLDisplay egl_display = gdk_wayland_display_get_egl_display(gdisplay);
+    assert(egl_display != EGL_NO_DISPLAY);
+
     struct wl_surface* const wl_surface = gdk_wayland_surface_get_wl_surface(gsurface);
     assert(wl_surface != NULL);
 

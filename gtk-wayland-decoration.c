@@ -21,7 +21,7 @@
 
 static int gtk_idle_check_mainloop(struct gtk_decoration* const gtkdecor)
 {
-    fprintf(stderr, "[gtk-wayland-decoration] gtk_idle_check_mainloop reached\n");
+    // fprintf(stderr, "[gtk-wayland-decoration] gtk_idle_check_mainloop reached\n");
     gtkdecor->idlerecv.glib = true;
     return 0;
 }
@@ -125,8 +125,7 @@ struct gtk_decoration* gtk3_decoration_init(void* const gobject,
     }
 
     // this will check if the host is running the mainloop
-    const unsigned idle = g_idle_add_full(300, gtk_idle_check_mainloop, gtkdecor, NULL);
-    fprintf(stderr, "[gtk-wayland-decoration] idle %u\n", idle);
+    g_idle_add_full(300, gtk_idle_check_mainloop, gtkdecor, NULL);
 
     // create a dummy gtk3 window so we can find the offset and header height
     {
@@ -196,9 +195,6 @@ struct gtk_decoration* gtk3_decoration_init(void* const gobject,
 
     gtkdecor->gtkver = 3;
     gtkdecor->gtkwindow = window;
-
-    fprintf(stderr, "[gtk-wayland-decoration] DONE %u\n", idle);
-
     return gtkdecor;
 }
 
@@ -285,8 +281,7 @@ struct gtk_decoration* gtk4_decoration_init(void* const gobject,
         gtk_init();
 
     // this will check if the host is running the mainloop
-    const unsigned idle = g_idle_add_full(300, gtk_idle_check_mainloop, gtkdecor, NULL);
-    fprintf(stderr, "[gtk-wayland-decoration] idle %u\n", idle);
+    g_idle_add_full(300, gtk_idle_check_mainloop, gtkdecor, NULL);
 
     // create a dummy gtk4 window so we can find the offset and header height
     int extrawidth, extraheight;
@@ -465,26 +460,25 @@ struct gtk_decoration* gtk_decoration_init(const uint32_t width,
 
 void gtk_decoration_idle(struct gtk_decoration* const gtkdecor)
 {
-    static int (*g_main_context_iteration)(void*, int);
-
-    if (g_main_context_iteration == NULL)
-    {
-        g_main_context_iteration = dlsym(gtkdecor->glib, "g_main_context_iteration");
-        assert(g_main_context_iteration != NULL);
-    }
-
     if (gtkdecor->idlerecv.plugin < 2)
     {
-        fprintf(stderr, "[gtk-wayland-decoration] gtk_decoration_idle gtkdecor->idlerecv.glib:%d\n", (gtkdecor->idlerecv.glib));
-
         if (++gtkdecor->idlerecv.plugin == 2)
-            gtkdecor->mainloop = !gtkdecor->idlerecv.glib;
-
+        {
+            if ((gtkdecor->mainloop = !gtkdecor->idlerecv.glib))
+                fprintf(stderr, "[gtk-wayland-decoration] host glib mainloop not present? will manually idle glib\n");
+            else
+                fprintf(stderr, "[gtk-wayland-decoration] auto-detected host glib mainloop!\n");
+        }
         return;
     }
 
     if (gtkdecor->mainloop)
-        g_main_context_iteration(NULL, true);
+    {
+        int (*g_main_context_iteration)(void*, int) = dlsym(gtkdecor->glib, "g_main_context_iteration");
+        assert(g_main_context_iteration != NULL);
+
+        g_main_context_iteration(NULL, false);
+    }
 }
 
 void gtk_decoration_destroy(struct gtk_decoration* const gtkdecor)
