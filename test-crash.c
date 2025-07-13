@@ -47,6 +47,8 @@ void test()
     uishow->hide(uihandle);
 
     lv2ui_descriptor->cleanup(uihandle);
+
+    dlclose(lib);
 }
 
 int main()

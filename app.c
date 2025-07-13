@@ -516,7 +516,7 @@ struct app* app_init(struct wl_display* const wl_display,
         if (app->xdg_decoration_manager == NULL)
         {
             // we really, really do not want to do our custom decorations that will look out of place everywhere..
-            // so here we restart the whole thing by and embed on a gtk app that does it for us.
+            // so here we restart the whole thing and embed ourselves inside a gtk app that does decoration for us.
 
             wl_compositor_destroy(app->wl_compositor);
             app->wl_compositor = NULL;
