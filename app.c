@@ -655,6 +655,8 @@ struct app* app_init(struct wl_display* const wl_display,
 
 void app_run(struct app* const app)
 {
+    assert(!app->embed);
+
     if (app->gtkdecor != NULL)
     {
         while (!app->gtkdecor->closing && !app->closing)
@@ -675,7 +677,8 @@ void app_idle(struct app* const app)
         else
             gtk_decoration_idle(app->gtkdecor);
     }
-    else
+    // TESTING do we need this?
+    else if (!app->embed)
     {
         wl_display_dispatch_pending(app->wl_display);
         wl_display_roundtrip(app->wl_display);

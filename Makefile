@@ -48,7 +48,7 @@ wayland-audio-plugin-test: app.o gtk-wayland-decoration.o main.o proto/xdg-decor
 	$(CC) $^ $(LDFLAGS) -o $@
 
 wayland-audio-plugin-test.lv2/plugin.so: app.o gtk-wayland-decoration.o plugin.o proto/xdg-decoration.o proto/xdg-shell.o
-	$(CC) $^ $(LDFLAGS) -shared -o $@
+	$(CC) $^ $(LDFLAGS) -Wl,-z,nodelete -shared -o $@
 
 wl-host: app.o gtk-wayland-decoration.o wl-host.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CC) $^ $(LDFLAGS) -o $@

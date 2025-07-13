@@ -16,7 +16,20 @@ struct gtk_decoration {
     struct {
         int x, y;
     } offset;
+
+    /* check if host is running glib mainloop
+     * we do this by adding a high priority timeout when creating the gtk window.
+     * if our timeout is called before the first gtk_decoration_idle, host has mainloop.
+     */
+    struct {
+        // gtk_decoration_idle count
+        int plugin;
+        // glib timeout received
+        bool glib;
+    } idlerecv;
+
     bool closing;
+    bool mainloop;
     int gtkver;
     void* gtkwindow;
 };

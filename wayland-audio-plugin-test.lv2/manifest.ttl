@@ -85,7 +85,7 @@ ui:WaylandSurfaceUI
     lv2:extensionData ui:idleInterface ,
                       ui:showInterface ;
 
-    lv2:optionalFeature ui:makeResident , ui:parent ;
+    lv2:optionalFeature ui:parent ;
 
     lv2:requiredFeature opts:options ,
                         ui:idleInterface ;
