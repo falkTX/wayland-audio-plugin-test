@@ -282,13 +282,13 @@ static void wl_seat_capabilities(struct app* const app, struct wl_seat* const wl
 
     if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD)
     {
-        struct wl_keyboard* const wl_keyboard = wl_seat_get_keyboard(wl_seat);
-        wl_keyboard_add_listener(wl_keyboard, &wl_keyboard_listener, app);
+        assert(app->wl_keyboard == NULL);
+        app->wl_keyboard = wl_seat_get_keyboard(wl_seat);
     }
     if (capabilities & WL_SEAT_CAPABILITY_POINTER)
     {
-        struct wl_pointer* const wl_pointer = wl_seat_get_pointer(wl_seat);
-        wl_pointer_add_listener(wl_pointer, &wl_pointer_listener, app);
+        assert(app->wl_pointer == NULL);
+        app->wl_pointer = wl_seat_get_pointer(wl_seat);
     }
 }
 
@@ -618,6 +618,16 @@ struct app* app_init(struct wl_display* const wl_display,
     wl_surface_commit(app->wl_surface);
     wl_display_roundtrip(app->wl_display);
 
+    // these must all be valid now
+    assert(app->wl_keyboard != NULL);
+    assert(app->wl_pointer != NULL);
+
+    err = wl_keyboard_add_listener(app->wl_keyboard, &wl_keyboard_listener, app);
+    assert(err == 0);
+
+    err = wl_pointer_add_listener(app->wl_pointer, &wl_pointer_listener, app);
+    assert(err == 0);
+
     // EGLDisplay old_display;
     // EGLContext old_context = NULL;
     // EGLSurface old_surface = NULL;
@@ -793,6 +803,11 @@ void app_update(struct app* app)
 
 void app_destroy(struct app* const app)
 {
+    int err;
+
+    err = eglMakeCurrent(app->egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    assert(err == EGL_TRUE);
+
     eglDestroyContext(app->egl.display, app->egl.context);
     eglDestroySurface(app->egl.display, app->egl.surface);
     wl_egl_window_destroy(app->egl.window);
@@ -815,6 +830,8 @@ void app_destroy(struct app* const app)
         xdg_toplevel_destroy(app->xdg_toplevel);
         xdg_surface_destroy(app->xdg_surface);
     }
+    wl_keyboard_destroy(app->wl_keyboard);
+    wl_pointer_destroy(app->wl_pointer);
     wl_surface_destroy(app->wl_surface);
 
     wl_compositor_destroy(app->wl_compositor);

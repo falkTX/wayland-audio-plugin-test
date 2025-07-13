@@ -9,6 +9,7 @@
 
 #include <dlfcn.h>
 #include <stddef.h>
+#include <unistd.h>
 
 #include <lv2/ui/ui.h>
 
@@ -50,7 +51,7 @@ void test()
 
 int main()
 {
-    test();
-    test();
+    for (int i = 0; i < 50; ++i)
+        test();
     return 0;
 }

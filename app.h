@@ -39,6 +39,8 @@ struct egl {
 struct app {
     struct wl_compositor* wl_compositor;
     struct wl_display* wl_display;
+    struct wl_keyboard* wl_keyboard;
+    struct wl_pointer* wl_pointer;
     struct wl_registry* wl_registry;
     struct wl_seat* wl_seat;
     struct wl_shm* wl_shm;

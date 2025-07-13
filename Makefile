@@ -41,7 +41,7 @@ gtk4-host: gtk4-host.c app.o gtk-wayland-decoration.o proto/xdg-decoration.o pro
 qt5-host: qt-host.cpp app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CXX) $^ $(CXXFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs Qt5WaylandClient Qt5Widgets) -o $@
 
-test-crash: test-crash.o
+test-crash: test-crash.o wayland-audio-plugin-test.lv2/plugin.so
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) -o $@
 
 qt6-host: qt-host.cpp app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-shell.o
