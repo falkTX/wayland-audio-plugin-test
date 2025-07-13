@@ -220,6 +220,9 @@ struct gtk_decoration* gtk4_decoration_init(void* const gobject,
     unsigned (*g_idle_add_full)(int, void*, void*, void*) = dlsym(glib, "g_idle_add_full");
     assert(g_idle_add_full != NULL);
 
+    EGLDisplay (*gdk_wayland_display_get_egl_display)(void*) = dlsym(gtklib, "gdk_wayland_display_get_egl_display");
+    assert(gdk_wayland_display_get_egl_display != NULL);
+
     void* (*gdk_wayland_display_get_wl_display)(void*) = dlsym(gtklib, "gdk_wayland_display_get_wl_display");
     assert(gdk_wayland_display_get_wl_display != NULL);
 
@@ -347,6 +350,9 @@ struct gtk_decoration* gtk4_decoration_init(void* const gobject,
     void* const gsurface = gtk_native_get_surface(gnative);
     assert(gsurface != NULL);
 
+    gtkdecor->egl_display = gdk_wayland_display_get_egl_display(gdisplay);
+    assert(gtkdecor->egl_display != EGL_NO_DISPLAY);
+
     gtkdecor->wl_display = gdk_wayland_display_get_wl_display(gdisplay);
     assert(gtkdecor->wl_display != NULL);
 
@@ -403,20 +409,23 @@ struct gtk_decoration* gtk_decoration_init(const uint32_t width,
     }
 
     // check if another kind of Gtk has been loaded, it's likely Gtk3
-    const unsigned long GdkEvent_type = g_type_from_name("GdkEvent");
-    if (GdkEvent_type != 0)
+    if (gtkver == 0)
     {
-        // make sure everything is ok first!
-        const char* const GdkEvent_name = g_type_name(GdkEvent_type);
-        if (GdkEvent_name != NULL && strncmp(GdkEvent_name, "GdkEvent", 9) == 0)
+        const unsigned long GdkEvent_type = g_type_from_name("GdkEvent");
+        if (GdkEvent_type != 0)
         {
-            gtklib = dlopen("libgtk-3.so.0", RTLD_FLAGS) ?:
-                     dlopen("libgtk-3.so", RTLD_FLAGS);
-
-            if (gtklib != NULL)
+            // make sure everything is ok first!
+            const char* const GdkEvent_name = g_type_name(GdkEvent_type);
+            if (GdkEvent_name != NULL && strncmp(GdkEvent_name, "GdkEvent", 9) == 0)
             {
-                fprintf(stderr, "[gtk-wayland-decoration] auto-detected gtk3!\n");
-                gtkver = 3;
+                gtklib = dlopen("libgtk-3.so.0", RTLD_FLAGS) ?:
+                         dlopen("libgtk-3.so", RTLD_FLAGS);
+
+                if (gtklib != NULL)
+                {
+                    fprintf(stderr, "[gtk-wayland-decoration] auto-detected gtk3!\n");
+                    gtkver = 3;
+                }
             }
         }
     }

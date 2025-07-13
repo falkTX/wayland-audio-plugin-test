@@ -52,6 +52,7 @@ struct app {
     struct xdg_wm_base* xdg_wm_base;
     struct egl egl;
     struct gtk_decoration* gtkdecor;
+    struct wl_subsurface* parent_wl_surface;
     const char* name;
     bool closing, embed, reuse_egl_display, supports_decorations;
     int32_t width;

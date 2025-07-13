@@ -16,6 +16,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <wayland-egl.h>
+#include <EGL/egl.h>
+
 #include "app.h"
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -275,7 +278,7 @@ static int lv2ui_show(LV2UI_Handle handle)
 
     assert(ui->app == NULL);
 
-    ui->app = app_init(NULL, NULL, NULL, ui->title, ui->scaleFactor);
+    ui->app = app_init(NULL, NULL, EGL_NO_DISPLAY, ui->title, ui->scaleFactor);
     assert(ui->app != NULL);
 
     ui->app->r = ui->r;

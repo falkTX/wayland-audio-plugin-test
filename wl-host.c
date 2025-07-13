@@ -15,7 +15,7 @@
 
 int main()
 {
-    struct app* const app = app_init(NULL, NULL, NULL, "host", 2.0f);
+    struct app* const app = app_init(NULL, NULL, EGL_NO_DISPLAY, "host", 2.0f);
     assert(app != NULL);
 
     // bigger app is 2x size and grey color
@@ -23,12 +23,13 @@ int main()
     app->name = "host";
     app_update(app);
 
-    struct app* const plugin = app_init(app->wl_display, app->wl_surface, app->egl.display, "plugin", 1.0f);
+    struct app* const plugin = app_init(app->wl_display, app->wl_surface, EGL_NO_DISPLAY, "plugin", 1.0f);
     assert(plugin != NULL);
     plugin->name = "plugin";
 
     // move plugin surface to center
     wl_subsurface_set_position(plugin->wl_subsurface, INITIAL_WIDTH / 2, INITIAL_HEIGHT / 2);
+    wl_surface_commit(app->wl_surface);
 
     // these do nothing
     // wl_subsurface_place_below(plugin->wl_subsurface, app->wl_surface);
@@ -39,6 +40,12 @@ int main()
     {
         app_idle(app);
         app_idle(plugin);
+
+        if ((plugin->r += 0.01f) > 1.f)
+            plugin->r = 0.f;
+
+        app_update(plugin);
+
         usleep(16666);
     }
 

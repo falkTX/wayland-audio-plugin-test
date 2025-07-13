@@ -371,21 +371,19 @@ static void xdg_surface_configure(struct app* const app,
         return;
 
     int err;
-    EGLDisplay old_display;
-    EGLContext old_context;
-    EGLSurface old_surface;
-    if (app->reuse_egl_display)
-    {
-        old_display = eglGetCurrentDisplay();
-        old_context = eglGetCurrentContext();
-        old_surface = eglGetCurrentSurface(EGL_DRAW);
-    }
-    else
-    {
-        old_display = app->egl.display;
-        old_context = NULL;
-        old_surface = NULL;
-    }
+    // EGLDisplay old_display;
+    // EGLContext old_context = NULL;
+    // EGLSurface old_surface = NULL;
+    // if (app->reuse_egl_display)
+    // {
+    //     old_display = eglGetCurrentDisplay();
+    //     // old_context = eglGetCurrentContext();
+    //     // old_surface = eglGetCurrentSurface(EGL_DRAW);
+    // }
+    // else
+    // {
+    //     old_display = app->egl.display;
+    // }
 
     err = eglMakeCurrent(app->egl.display, app->egl.surface, app->egl.surface, app->egl.context);
     assert(err == EGL_TRUE);
@@ -398,8 +396,8 @@ static void xdg_surface_configure(struct app* const app,
     err = eglSwapBuffers(app->egl.display, app->egl.surface);
     assert(err == EGL_TRUE);
 
-    err = eglMakeCurrent(old_display, old_surface, old_surface, old_context);
-    assert(err == EGL_TRUE);
+    // err = eglMakeCurrent(old_display, old_surface, old_surface, old_context);
+    // assert(err == EGL_TRUE);
 
     xdg_surface_ack_configure(xdg_surface, serial);
     wl_surface_commit(app->wl_surface);
@@ -466,7 +464,7 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 
 struct app* app_init(struct wl_display* const wl_display,
                      struct wl_surface* parent_wl_surface,
-                     const EGLDisplay egl_display,
+                     EGLDisplay egl_display,
                      const char* const title,
                      const float scaleFactor)
 {
@@ -563,6 +561,9 @@ struct app* app_init(struct wl_display* const wl_display,
 
             // parent surface comes from gtk decoration
             parent_wl_surface = app->gtkdecor->wl_surface;
+
+            // gtk4 provides this for us too
+            // egl_display = app->gtkdecor->egl_display;
         }
     }
 
@@ -583,6 +584,8 @@ struct app* app_init(struct wl_display* const wl_display,
 
         if (app->gtkdecor != NULL)
             wl_subsurface_set_position(app->wl_subsurface, app->gtkdecor->offset.x, app->gtkdecor->offset.y);
+
+        app->parent_wl_surface = parent_wl_surface;
     }
     else
     {
@@ -615,18 +618,25 @@ struct app* app_init(struct wl_display* const wl_display,
     wl_surface_commit(app->wl_surface);
     wl_display_roundtrip(app->wl_display);
 
-    EGLDisplay old_display;
-    EGLContext old_context;
-    EGLSurface old_surface;
+    // EGLDisplay old_display;
+    // EGLContext old_context = NULL;
+    // EGLSurface old_surface = NULL;
     if (egl_display != EGL_NO_DISPLAY)
     {
-        app->egl.display = egl_display;
-        app->reuse_egl_display = true;
-        old_display = eglGetCurrentDisplay();
-        old_context = eglGetCurrentContext();
-        old_surface = eglGetCurrentSurface(EGL_DRAW);
+    //     app->egl.display = egl_display;
+    //     app->reuse_egl_display = true;
+    //
+    //     if ((old_display = eglGetCurrentDisplay()) != EGL_NO_DISPLAY)
+    //     {
+    //         // old_context = eglGetCurrentContext();
+    //         // old_surface = eglGetCurrentSurface(EGL_DRAW);
+    //     }
+    //     else
+    //     {
+    //         old_display = app->egl.display;
+    //     }
     }
-    else
+    // else
     {
         app->egl.display = eglGetDisplay(app->wl_display);
         assert(app->egl.display != EGL_NO_DISPLAY);
@@ -634,9 +644,7 @@ struct app* app_init(struct wl_display* const wl_display,
         err = eglInitialize(app->egl.display, NULL, NULL);
         assert(err == EGL_TRUE);
 
-        old_display = app->egl.display;
-        old_context = NULL;
-        old_surface = NULL;
+        // old_display = app->egl.display;
     }
 
     app->egl.window = wl_egl_window_create(app->wl_surface,
@@ -684,8 +692,8 @@ struct app* app_init(struct wl_display* const wl_display,
     err = eglSwapBuffers(app->egl.display, app->egl.surface);
     assert(err == EGL_TRUE);
 
-    err = eglMakeCurrent(old_display, old_surface, old_surface, old_context);
-    assert(err == EGL_TRUE);
+    // err = eglMakeCurrent(old_display, old_surface, old_surface, old_context);
+    // assert(err == EGL_TRUE);
 
     return app;
 }
@@ -710,9 +718,14 @@ void app_idle(struct app* const app)
     if (app->gtkdecor != NULL)
     {
         if (app->gtkdecor->closing)
+        {
             app->closing = true;
+            app->parent_wl_surface = NULL;
+        }
         else
+        {
             gtk_decoration_idle(app->gtkdecor);
+        }
     }
     // TESTING do we need this?
     else if (!app->embed)
@@ -735,21 +748,19 @@ void app_resize(struct app* app, int width, int height)
 void app_update(struct app* app)
 {
     int err;
-    EGLDisplay old_display;
-    EGLContext old_context;
-    EGLSurface old_surface;
-    if (app->reuse_egl_display)
-    {
-        old_display = eglGetCurrentDisplay();
-        old_context = eglGetCurrentContext();
-        old_surface = eglGetCurrentSurface(EGL_DRAW);
-    }
-    else
-    {
-        old_display = app->egl.display;
-        old_context = NULL;
-        old_surface = NULL;
-    }
+    // EGLDisplay old_display;
+    // EGLContext old_context = NULL;
+    // EGLSurface old_surface = NULL;
+    // if (app->reuse_egl_display)
+    // {
+    //     old_display = eglGetCurrentDisplay();
+    //     old_context = eglGetCurrentContext();
+    //     old_surface = eglGetCurrentSurface(EGL_DRAW);
+    // }
+    // else
+    // {
+        // old_display = app->egl.display;
+    // }
 
     err = eglMakeCurrent(app->egl.display, app->egl.surface, app->egl.surface, app->egl.context);
     assert(err == EGL_TRUE);
@@ -764,10 +775,20 @@ void app_update(struct app* app)
         assert(err == EGL_TRUE);
     }
 
+    // err = eglMakeCurrent(old_display, old_surface, old_surface, old_context);
+    // assert(err == EGL_TRUE);
+
     wl_surface_commit(app->wl_surface);
 
-    err = eglMakeCurrent(old_display, old_surface, old_surface, old_context);
-    assert(err == EGL_TRUE);
+    if (app->gtkdecor != NULL)
+    {
+        if (!app->gtkdecor->closing)
+            wl_surface_commit(app->gtkdecor->wl_surface);
+    }
+    else if (app->parent_wl_surface != NULL && app->supports_decorations)
+    {
+        wl_surface_commit(app->parent_wl_surface);
+    }
 }
 
 void app_destroy(struct app* const app)
@@ -823,6 +844,7 @@ void app_destroy(struct app* const app)
 
 // --------------------------------------------------------------------------------------------------------------------
 
+#ifndef TEST_CUSTOM_TITLE_BAR
 static void wayland_compositor_test(bool* const supports_decorations,
                                     struct wl_registry* const wl_registry,
                                     const uint32_t name,
@@ -832,11 +854,15 @@ static void wayland_compositor_test(bool* const supports_decorations,
     if (strcmp(interface, xdg_decoration_manager_interface.name) == 0)
         *supports_decorations = wl_registry != NULL && name != 0 && version != 0;
 }
+#endif
 
 bool wayland_compositor_supports_decorations()
 {
-    static bool first_run = true;
+#ifdef TEST_CUSTOM_TITLE_BAR
+    return false;
+#else
     static bool supports_decorations = false;
+    static bool first_run = true;
 
     if (first_run)
     {
@@ -866,6 +892,7 @@ bool wayland_compositor_supports_decorations()
     }
 
     return supports_decorations;
+#endif
 }
 
 // --------------------------------------------------------------------------------------------------------------------

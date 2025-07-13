@@ -7,10 +7,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <wayland-egl.h>
+#include <EGL/egl.h>
+
 struct gtk_decoration {
     void* gobject;
     void* glib;
     void* gtklib;
+    EGLDisplay egl_display;
     struct wl_display* wl_display;
     struct wl_surface* wl_surface;
     struct {

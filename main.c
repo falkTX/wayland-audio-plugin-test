@@ -15,7 +15,7 @@
 
 int main()
 {
-    struct app* const app = app_init(NULL, NULL, NULL, "testing", 1.0f);
+    struct app* const app = app_init(NULL, NULL, EGL_NO_DISPLAY, "testing", 1.0f);
     assert(app != NULL);
 
 #if 0

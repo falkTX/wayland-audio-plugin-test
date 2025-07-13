@@ -141,7 +141,7 @@ int main()
     struct wl_surface* const wl_surface = gdk_wayland_surface_get_wl_surface(gsurface);
     assert(wl_surface != NULL);
 
-    struct app* const plugin = app_init(wl_display, wl_surface, egl_display, "plugin", scale_factor);
+    struct app* const plugin = app_init(wl_display, wl_surface, EGL_NO_DISPLAY, "plugin", scale_factor);
     assert(plugin != NULL);
     plugin->name = "plugin";
 

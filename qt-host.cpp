@@ -65,7 +65,7 @@ public:
         }
 
         // TODO fetch scale factor
-        plugin = app_init(wl_display, wl_surface, NULL, "testing with qt", 1.0f);
+        plugin = app_init(wl_display, wl_surface, EGL_NO_DISPLAY, "testing with qt", 1.0f);
         timerId = startTimer(16);
 
         // move plugin surface to center

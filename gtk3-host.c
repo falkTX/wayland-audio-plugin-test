@@ -72,6 +72,11 @@ static void gtk_ui_destroy(void* const handle, struct app* const plugin)
 static int gtk_ui_timeout(struct app* const plugin)
 {
     app_idle(plugin);
+
+    if ((plugin->r += 0.01f) > 1.f)
+        plugin->r = 0.f;
+
+    app_update(plugin);
     return 1;
 }
 
@@ -125,7 +130,7 @@ int main(int argc, char* argv[])
     struct wl_surface* const wl_surface = gdk_wayland_window_get_wl_surface(gwin);
     assert(wl_surface != NULL);
 
-    struct app* const plugin = app_init(wl_display, wl_surface, NULL, "plugin", scale_factor);
+    struct app* const plugin = app_init(wl_display, wl_surface, EGL_NO_DISPLAY, "plugin", scale_factor);
     assert(plugin != NULL);
     plugin->name = "plugin";
 
