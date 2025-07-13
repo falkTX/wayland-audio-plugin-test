@@ -371,6 +371,22 @@ static void xdg_surface_configure(struct app* const app,
         return;
 
     int err;
+    EGLDisplay old_display;
+    EGLContext old_context;
+    EGLSurface old_surface;
+    if (app->reuse_egl_display)
+    {
+        old_display = eglGetCurrentDisplay();
+        old_context = eglGetCurrentContext();
+        old_surface = eglGetCurrentSurface(EGL_DRAW);
+    }
+    else
+    {
+        old_display = app->egl.display;
+        old_context = NULL;
+        old_surface = NULL;
+    }
+
     err = eglMakeCurrent(app->egl.display, app->egl.surface, app->egl.surface, app->egl.context);
     assert(err == EGL_TRUE);
 
@@ -382,7 +398,7 @@ static void xdg_surface_configure(struct app* const app,
     err = eglSwapBuffers(app->egl.display, app->egl.surface);
     assert(err == EGL_TRUE);
 
-    err = eglMakeCurrent(app->egl.display, NULL, NULL, NULL);
+    err = eglMakeCurrent(old_display, old_surface, old_surface, old_context);
     assert(err == EGL_TRUE);
 
     xdg_surface_ack_configure(xdg_surface, serial);
@@ -599,11 +615,16 @@ struct app* app_init(struct wl_display* const wl_display,
     wl_surface_commit(app->wl_surface);
     wl_display_roundtrip(app->wl_display);
 
-    // (EGLNativeDisplayType)
+    EGLDisplay old_display;
+    EGLContext old_context;
+    EGLSurface old_surface;
     if (egl_display != EGL_NO_DISPLAY)
     {
         app->egl.display = egl_display;
         app->reuse_egl_display = true;
+        old_display = eglGetCurrentDisplay();
+        old_context = eglGetCurrentContext();
+        old_surface = eglGetCurrentSurface(EGL_DRAW);
     }
     else
     {
@@ -612,6 +633,10 @@ struct app* app_init(struct wl_display* const wl_display,
 
         err = eglInitialize(app->egl.display, NULL, NULL);
         assert(err == EGL_TRUE);
+
+        old_display = app->egl.display;
+        old_context = NULL;
+        old_surface = NULL;
     }
 
     app->egl.window = wl_egl_window_create(app->wl_surface,
@@ -651,12 +676,15 @@ struct app* app_init(struct wl_display* const wl_display,
     glClearColor(1.0, 1.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     // glFlush();
-    err = eglSwapInterval(app->egl.display, 0);
-    assert(err == EGL_TRUE);
+    if (!app->reuse_egl_display)
+    {
+        err = eglSwapInterval(app->egl.display, 0);
+        assert(err == EGL_TRUE);
+    }
     err = eglSwapBuffers(app->egl.display, app->egl.surface);
     assert(err == EGL_TRUE);
 
-    err = eglMakeCurrent(app->egl.display, NULL, NULL, NULL);
+    err = eglMakeCurrent(old_display, old_surface, old_surface, old_context);
     assert(err == EGL_TRUE);
 
     return app;
@@ -707,6 +735,21 @@ void app_resize(struct app* app, int width, int height)
 void app_update(struct app* app)
 {
     int err;
+    EGLDisplay old_display;
+    EGLContext old_context;
+    EGLSurface old_surface;
+    if (app->reuse_egl_display)
+    {
+        old_display = eglGetCurrentDisplay();
+        old_context = eglGetCurrentContext();
+        old_surface = eglGetCurrentSurface(EGL_DRAW);
+    }
+    else
+    {
+        old_display = app->egl.display;
+        old_context = NULL;
+        old_surface = NULL;
+    }
 
     err = eglMakeCurrent(app->egl.display, app->egl.surface, app->egl.surface, app->egl.context);
     assert(err == EGL_TRUE);
@@ -714,12 +757,16 @@ void app_update(struct app* app)
     glClearColor(app->r, app->g, app->b, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    err = eglSwapBuffers(app->egl.display, app->egl.surface);
-    assert(err == EGL_TRUE);
+    if (!app->reuse_egl_display)
+    {
+        // FIXME
+        err = eglSwapBuffers(app->egl.display, app->egl.surface);
+        assert(err == EGL_TRUE);
+    }
 
     wl_surface_commit(app->wl_surface);
 
-    err = eglMakeCurrent(app->egl.display, NULL, NULL, NULL);
+    err = eglMakeCurrent(old_display, old_surface, old_surface, old_context);
     assert(err == EGL_TRUE);
 }
 

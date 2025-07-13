@@ -79,7 +79,7 @@ static void gtk_ui_destroy(void* const handle, struct app* const plugin)
 
 static int gtk_ui_timeout(struct app* const plugin)
 {
-    // app_idle(plugin);
+    app_idle(plugin);
 
     if ((plugin->r += 0.01f) > 1.f)
         plugin->r = 0.f;
@@ -108,10 +108,10 @@ int main()
     // bool native = gtk_window_controls_get_use_native_controls(wincontrols);
     // assert(native);
 
-    bool check = gtk_window_get_decorated(window);
-    assert(check);
+    const char* winlayout = gtk_window_controls_get_decoration_layout(wincontrols);
+    fprintf(stderr, "winlayout %p\n", winlayout);
 
-    if (check)
+    if (winlayout != NULL)
         get_gtk_offsets(&offsets.x, &offsets.y, &offsets.width, &offsets.height, &scale_factor);
 
     gtk_window_set_decorated(window, true);
