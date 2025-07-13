@@ -20,7 +20,6 @@
 
 static void get_gtk_offsets(int* x, int* y, int* width, int* height, double *scale_factor)
 {
-#if 1 // def TEST_CUSTOM_TITLE_BAR
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
@@ -61,10 +60,6 @@ static void get_gtk_offsets(int* x, int* y, int* width, int* height, double *sca
     *height = req.height;
 
     gtk_window_destroy(window);
-#else
-    *x = *y = *width = *height = 0;
-    *scale_factor = 1.0;
-#endif
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -99,20 +94,16 @@ int main()
     } offsets = { 0 };
     double scale_factor = 1;
 
+#ifndef TEST_CUSTOM_TITLE_BAR
+    if (!wayland_compositor_supports_decorations())
+#endif
+        get_gtk_offsets(&offsets.x, &offsets.y, &offsets.width, &offsets.height, &scale_factor);
+
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
     GtkWindowControls* const wincontrols = gtk_window_controls_new(GTK_PACK_START);
     assert(wincontrols != NULL);
-
-    // bool native = gtk_window_controls_get_use_native_controls(wincontrols);
-    // assert(native);
-
-    const char* winlayout = gtk_window_controls_get_decoration_layout(wincontrols);
-    fprintf(stderr, "winlayout %p\n", winlayout);
-
-    if (winlayout != NULL)
-        get_gtk_offsets(&offsets.x, &offsets.y, &offsets.width, &offsets.height, &scale_factor);
 
     gtk_window_set_decorated(window, true);
     gtk_window_set_default_size(window,

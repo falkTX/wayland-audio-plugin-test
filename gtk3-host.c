@@ -20,7 +20,6 @@
 
 static void get_gtk_offsets(int* x, int* y, double *scale_factor)
 {
-#ifdef TEST_CUSTOM_TITLE_BAR
     GtkWindow* const window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     assert(window != NULL);
 
@@ -55,10 +54,6 @@ static void get_gtk_offsets(int* x, int* y, double *scale_factor)
     *y += req.height;
 
     gtk_widget_destroy(window);
-#else
-    *x = *y = 0;
-    *scale_factor = 1.0;
-#endif
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -88,9 +83,13 @@ int main(int argc, char* argv[])
 
     struct {
         int x, y;
-    } offsets;
-    double scale_factor;
-    get_gtk_offsets(&offsets.x, &offsets.y, &scale_factor);
+    } offsets = { 0, 0 };
+    double scale_factor = 1.0;
+
+#ifndef TEST_CUSTOM_TITLE_BAR
+    if (!wayland_compositor_supports_decorations())
+#endif
+        get_gtk_offsets(&offsets.x, &offsets.y, &scale_factor);
 
     GtkWindow* const window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     assert(window != NULL);

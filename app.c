@@ -822,3 +822,50 @@ void app_destroy(struct app* const app)
 }
 
 // --------------------------------------------------------------------------------------------------------------------
+
+static void wayland_compositor_test(bool* const supports_decorations,
+                                    struct wl_registry* const wl_registry,
+                                    const uint32_t name,
+                                    const char* const interface,
+                                    const uint32_t version)
+{
+    if (strcmp(interface, xdg_decoration_manager_interface.name) == 0)
+        *supports_decorations = wl_registry != NULL && name != 0 && version != 0;
+}
+
+bool wayland_compositor_supports_decorations()
+{
+    static bool first_run = true;
+    static bool supports_decorations = false;
+
+    if (first_run)
+    {
+        first_run = false;
+        int err;
+
+        const struct wl_registry_listener wl_registry_listener = {
+            wayland_compositor_test,
+            NULL,
+        };
+
+        struct wl_display* const wl_display = wl_display_connect(NULL);
+        assert(wl_display != NULL);
+
+        struct wl_registry* const wl_registry = wl_display_get_registry(wl_display);
+        assert(wl_registry != NULL);
+
+        err = wl_registry_add_listener(wl_registry, &wl_registry_listener, &supports_decorations);
+        assert(err == 0);
+
+        // first block-wait to receive global announce events
+        err = wl_display_roundtrip(wl_display);
+        assert(err > 0);
+
+        wl_registry_destroy(wl_registry);
+        wl_display_disconnect(wl_display);
+    }
+
+    return supports_decorations;
+}
+
+// --------------------------------------------------------------------------------------------------------------------

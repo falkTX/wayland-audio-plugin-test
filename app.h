@@ -81,6 +81,9 @@ void app_update(struct app* app);
 // destroy app
 void app_destroy(struct app* app);
 
+// utilities
+bool wayland_compositor_supports_decorations();
+
 // --------------------------------------------------------------------------------------------------------------------
 
 #ifdef __cplusplus
