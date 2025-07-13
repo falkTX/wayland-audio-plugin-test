@@ -123,18 +123,11 @@ static LV2UI_Handle lv2ui_instantiate(const LV2UI_Descriptor* const descriptor,
             parent = features[i]->data;
     }
 
-    // host must provide options and URID map features
-    if (options == NULL || uridMap == NULL)
-    {
-        fprintf(stderr, "LV2 features missing, cannot continue!\n");
-        return NULL;
-    }
-
     float scaleFactor = 1.0f;
-    const char* title = NULL;
+    const char* title = "test";
     struct wl_display* wl_display = NULL;
 
-    if (options != NULL)
+    if (options != NULL && uridMap != NULL)
     {
         const LV2_URID uridAtomFloat = uridMap->map(uridMap->handle, LV2_ATOM__Float);
         const LV2_URID uridAtomString = uridMap->map(uridMap->handle, LV2_ATOM__String);
@@ -165,6 +158,11 @@ static LV2UI_Handle lv2ui_instantiate(const LV2UI_Descriptor* const descriptor,
 
             // TODO check if we can use transient window with xdg_toplevel_set_parent
         }
+    }
+    else if (parent != NULL)
+    {
+        parent = NULL;
+        fprintf(stderr, "Host provides UI parent but not options or urid-map, which are required\n");
     }
 
     if (parent != NULL && wl_display == NULL)

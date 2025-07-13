@@ -1,9 +1,12 @@
 *.o
 *.so
+.cache
+compile_commands.json
 gtk3-host
 gtk4-host
 qt5-host
 qt6-host
+test-crash
 wayland-audio-plugin-test
 wl-host
 proto/*.*

@@ -20,7 +20,7 @@ WAYLAND_PROTOCOLS_DIR = $(shell pkg-config --variable=pkgdatadir wayland-protoco
 WAYLAND_PROTOCOL_FILE_XDG_DECORATION = $(WAYLAND_PROTOCOLS_DIR)/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml
 WAYLAND_PROTOCOL_FILE_XDG_SHELL = $(WAYLAND_PROTOCOLS_DIR)/stable/xdg-shell/xdg-shell.xml
 
-TARGETS = gtk3-host gtk4-host qt5-host qt6-host wayland-audio-plugin-test wayland-audio-plugin-test.lv2/plugin.so wl-host
+TARGETS = gtk3-host gtk4-host qt5-host qt6-host test-crash wayland-audio-plugin-test wayland-audio-plugin-test.lv2/plugin.so wl-host
 
 all: build
 
@@ -40,6 +40,9 @@ gtk4-host: gtk4-host.c app.o gtk-wayland-decoration.o proto/xdg-decoration.o pro
 
 qt5-host: qt-host.cpp app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CXX) $^ $(CXXFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs Qt5WaylandClient Qt5Widgets) -o $@
+
+test-crash: test-crash.o
+	$(CC) $^ $(CFLAGS) $(LDFLAGS) -o $@
 
 qt6-host: qt-host.cpp app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-shell.o
 	$(CXX) $^ $(CXXFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs Qt6WaylandClient Qt6Widgets) -o $@
