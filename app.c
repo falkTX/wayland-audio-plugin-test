@@ -450,6 +450,7 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 
 struct app* app_init(struct wl_display* const wl_display,
                      struct wl_surface* parent_wl_surface,
+                     const EGLDisplay egl_display,
                      const char* const title,
                      const float scaleFactor)
 {
@@ -599,11 +600,19 @@ struct app* app_init(struct wl_display* const wl_display,
     wl_display_roundtrip(app->wl_display);
 
     // (EGLNativeDisplayType)
-    app->egl.display = eglGetDisplay(app->wl_display);
-    assert(app->egl.display != EGL_NO_DISPLAY);
+    if (egl_display != EGL_NO_DISPLAY)
+    {
+        app->egl.display = egl_display;
+        app->reuse_egl_display = true;
+    }
+    else
+    {
+        app->egl.display = eglGetDisplay(app->wl_display);
+        assert(app->egl.display != EGL_NO_DISPLAY);
 
-    err = eglInitialize(app->egl.display, NULL, NULL);
-    assert(err == EGL_TRUE);
+        err = eglInitialize(app->egl.display, NULL, NULL);
+        assert(err == EGL_TRUE);
+    }
 
     app->egl.window = wl_egl_window_create(app->wl_surface,
                                            INITIAL_WIDTH * scaleFactor,
@@ -719,7 +728,9 @@ void app_destroy(struct app* const app)
     eglDestroyContext(app->egl.display, app->egl.context);
     eglDestroySurface(app->egl.display, app->egl.surface);
     wl_egl_window_destroy(app->egl.window);
-    eglTerminate(app->egl.display);
+
+    if (!app->reuse_egl_display)
+        eglTerminate(app->egl.display);
 
     if (app->embed)
     {

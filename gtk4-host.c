@@ -20,7 +20,7 @@
 
 static void get_gtk_offsets(int* x, int* y, int* width, int* height, double *scale_factor)
 {
-#ifdef TEST_CUSTOM_TITLE_BAR
+#if 1 // def TEST_CUSTOM_TITLE_BAR
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
@@ -79,7 +79,12 @@ static void gtk_ui_destroy(void* const handle, struct app* const plugin)
 
 static int gtk_ui_timeout(struct app* const plugin)
 {
-    app_idle(plugin);
+    // app_idle(plugin);
+
+    if ((plugin->r += 0.01f) > 1.f)
+        plugin->r = 0.f;
+
+    app_update(plugin);
     return 1;
 }
 
@@ -91,12 +96,23 @@ int main()
 
     struct {
         int x, y, width, height;
-    } offsets;
-    double scale_factor;
-    get_gtk_offsets(&offsets.x, &offsets.y, &offsets.width, &offsets.height, &scale_factor);
+    } offsets = { 0 };
+    double scale_factor = 1;
 
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
+
+    GtkWindowControls* const wincontrols = gtk_window_controls_new(GTK_PACK_START);
+    assert(wincontrols != NULL);
+
+    // bool native = gtk_window_controls_get_use_native_controls(wincontrols);
+    // assert(native);
+
+    bool check = gtk_window_get_decorated(window);
+    assert(check);
+
+    if (check)
+        get_gtk_offsets(&offsets.x, &offsets.y, &offsets.width, &offsets.height, &scale_factor);
 
     gtk_window_set_decorated(window, true);
     gtk_window_set_default_size(window,
@@ -132,7 +148,7 @@ int main()
     struct wl_surface* const wl_surface = gdk_wayland_surface_get_wl_surface(gsurface);
     assert(wl_surface != NULL);
 
-    struct app* const plugin = app_init(wl_display, wl_surface, "plugin", scale_factor);
+    struct app* const plugin = app_init(wl_display, wl_surface, egl_display, "plugin", scale_factor);
     assert(plugin != NULL);
     plugin->name = "plugin";
 

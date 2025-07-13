@@ -15,10 +15,10 @@
 
 int main()
 {
-    struct app* const app = app_init(NULL, NULL, "testing", 1.0f);
+    struct app* const app = app_init(NULL, NULL, NULL, "testing", 1.0f);
     assert(app != NULL);
 
-#if 1
+#if 0
     // block-wait
     app_run(app);
 #else
@@ -27,6 +27,11 @@ int main()
     {
         app_idle(app);
         usleep(16666);
+
+        if ((app->r += 0.01f) > 1.f)
+            app->r = 0.f;
+
+        app_update(app);
     }
 #endif
 

@@ -53,14 +53,18 @@ struct app {
     struct egl egl;
     struct gtk_decoration* gtkdecor;
     const char* name;
-    bool closing, embed, supports_decorations;
+    bool closing, embed, reuse_egl_display, supports_decorations;
     int32_t width;
     int32_t height;
     float r, g, b;
 };
 
 // init everything, allow passing custom initial values
-struct app* app_init(struct wl_display* wl_display, struct wl_surface* wl_surface, const char* title, float scaleFactor);
+struct app* app_init(struct wl_display* wl_display,
+                     struct wl_surface* wl_surface,
+                     EGLDisplay egl_display,
+                     const char* title,
+                     float scaleFactor);
 
 // run loop (blocking)
 void app_run(struct app* app);

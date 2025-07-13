@@ -15,7 +15,7 @@
 
 int main()
 {
-    struct app* const app = app_init(NULL, NULL, "host", 2.0f);
+    struct app* const app = app_init(NULL, NULL, NULL, "host", 2.0f);
     assert(app != NULL);
 
     // bigger app is 2x size and grey color
@@ -23,7 +23,7 @@ int main()
     app->name = "host";
     app_update(app);
 
-    struct app* const plugin = app_init(app->wl_display, app->wl_surface, "plugin", 1.0f);
+    struct app* const plugin = app_init(app->wl_display, app->wl_surface, app->egl.display, "plugin", 1.0f);
     assert(plugin != NULL);
     plugin->name = "plugin";
 

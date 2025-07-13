@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
     struct wl_surface* const wl_surface = gdk_wayland_window_get_wl_surface(gwin);
     assert(wl_surface != NULL);
 
-    struct app* const plugin = app_init(wl_display, wl_surface, "plugin", scale_factor);
+    struct app* const plugin = app_init(wl_display, wl_surface, NULL, "plugin", scale_factor);
     assert(plugin != NULL);
     plugin->name = "plugin";
 

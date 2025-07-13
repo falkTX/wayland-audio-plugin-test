@@ -177,7 +177,7 @@ static LV2UI_Handle lv2ui_instantiate(const LV2UI_Descriptor* const descriptor,
 
     if (wl_display != NULL && wl_surface != NULL)
     {
-        ui->app = app_init(wl_display, wl_surface, title, scaleFactor);
+        ui->app = app_init(wl_display, wl_surface, NULL, title, scaleFactor);
         assert(ui->app != NULL);
 
         *widget = ui->app->wl_subsurface;
@@ -275,7 +275,7 @@ static int lv2ui_show(LV2UI_Handle handle)
 
     assert(ui->app == NULL);
 
-    ui->app = app_init(NULL, NULL, ui->title, ui->scaleFactor);
+    ui->app = app_init(NULL, NULL, NULL, ui->title, ui->scaleFactor);
     assert(ui->app != NULL);
 
     ui->app->r = ui->r;
