@@ -757,7 +757,7 @@ void app_update(struct app* app)
     glClearColor(app->r, app->g, app->b, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (!app->reuse_egl_display)
+    // if (!app->reuse_egl_display)
     {
         // FIXME
         err = eglSwapBuffers(app->egl.display, app->egl.surface);

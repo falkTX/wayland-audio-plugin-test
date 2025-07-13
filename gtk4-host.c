@@ -20,6 +20,9 @@
 
 static void get_gtk_offsets(int* x, int* y, int* width, int* height, double *scale_factor)
 {
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
 
@@ -60,6 +63,8 @@ static void get_gtk_offsets(int* x, int* y, int* width, int* height, double *sca
     *height = req.height;
 
     gtk_window_destroy(window);
+
+    #pragma GCC diagnostic pop
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -101,9 +106,6 @@ int main()
 
     GtkWindow* const window = gtk_window_new();
     assert(window != NULL);
-
-    GtkWindowControls* const wincontrols = gtk_window_controls_new(GTK_PACK_START);
-    assert(wincontrols != NULL);
 
     gtk_window_set_decorated(window, true);
     gtk_window_set_default_size(window,
