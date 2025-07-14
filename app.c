@@ -805,8 +805,17 @@ void app_destroy(struct app* const app)
 {
     int err;
 
-    err = eglMakeCurrent(app->egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    assert(err == EGL_TRUE);
+    if (app->gtkdecor == NULL || app->gtkdecor->egl_display != eglGetCurrentDisplay())
+    {
+        err = eglMakeCurrent(app->egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        assert(err == EGL_TRUE);
+    }
+
+    if (app->gtkdecor != NULL)
+    {
+        gtk_decoration_destroy(app->gtkdecor);
+        app->gtkdecor = NULL;
+    }
 
     eglDestroyContext(app->egl.display, app->egl.context);
     eglDestroySurface(app->egl.display, app->egl.surface);
@@ -851,9 +860,7 @@ void app_destroy(struct app* const app)
 
     wl_registry_destroy(app->wl_registry);
 
-    if (app->gtkdecor != NULL)
-        gtk_decoration_destroy(app->gtkdecor);
-    else if (!app->embed)
+    if (app->gtkdecor == NULL && !app->embed)
         wl_display_disconnect(app->wl_display);
 
     free(app);
