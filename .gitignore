@@ -2,6 +2,7 @@
 *.so
 .cache
 compile_commands.json
+gtk3-embed
 gtk3-host
 gtk4-host
 qt5-host

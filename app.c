@@ -18,11 +18,14 @@
 #include <GLES2/gl2.h>
 
 #include "proto/xdg-decoration.h"
+#include "proto/xdg-foreign.h"
 #include "proto/xdg-shell.h"
 
 // #define TEST_CUSTOM_TITLE_BAR
 
 #define LOG(...)
+// #define LOG printf
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
@@ -50,6 +53,16 @@ static void wl_registry_global_announce(struct app* const app,
     {
         assert(app->wl_shm == NULL);
         app->wl_shm = wl_registry_bind(app->wl_registry, name, &wl_shm_interface, 1);
+    }
+    else if (strcmp(interface, xdg_exporter_interface.name) == 0)
+    {
+        assert(app->xdg_exporter == NULL);
+        app->xdg_exporter = wl_registry_bind(app->wl_registry, name, &xdg_exporter_interface, 1);
+    }
+    else if (strcmp(interface, xdg_importer_interface.name) == 0)
+    {
+        assert(app->xdg_importer == NULL);
+        app->xdg_importer = wl_registry_bind(app->wl_registry, name, &xdg_importer_interface, 1);
     }
     else if (app->embed)
     {
@@ -500,6 +513,8 @@ struct app* app_init(struct wl_display* const wl_display,
     assert(app->wl_compositor != NULL);
     assert(app->wl_seat != NULL);
     assert(app->wl_shm != NULL);
+    assert(app->xdg_exporter != NULL);
+    assert(app->xdg_importer != NULL);
 
     if (app->embed)
     {

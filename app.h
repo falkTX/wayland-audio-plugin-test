@@ -21,6 +21,14 @@ extern "C" {
 #define xdg_decoration_manager_destroy zxdg_decoration_manager_v1_destroy
 #define xdg_decoration_manager_interface zxdg_decoration_manager_v1_interface
 #define xdg_decoration_manager_get_toplevel_decoration zxdg_decoration_manager_v1_get_toplevel_decoration
+#define xdg_exported zxdg_exported_v2
+#define xdg_exported_add_listener zxdg_exported_v2_add_listener
+#define xdg_exporter zxdg_exporter_v2
+#define xdg_exporter_interface zxdg_exporter_v2_interface
+#define xdg_exporter_export_toplevel zxdg_exporter_v2_export_toplevel
+#define xdg_importer zxdg_importer_v2
+#define xdg_importer_interface zxdg_importer_v2_interface
+#define xdg_importer_import_toplevel zxdg_importer_v2_import_toplevel
 #define xdg_toplevel_decoration zxdg_toplevel_decoration_v1
 #define xdg_toplevel_decoration_destroy zxdg_toplevel_decoration_v1_destroy
 #define xdg_toplevel_decoration_interface zxdg_toplevel_decoration_v1_interface
@@ -48,6 +56,8 @@ struct app {
     struct wl_subsurface* wl_subsurface;
     struct wl_surface* wl_surface;
     struct xdg_decoration_manager* xdg_decoration_manager;
+    struct xdg_exporter *xdg_exporter;
+    struct xdg_importer *xdg_importer;
     struct xdg_surface* xdg_surface;
     struct xdg_toplevel* xdg_toplevel;
     struct xdg_toplevel_decoration* xdg_toplevel_decoration;
