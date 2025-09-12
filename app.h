@@ -24,9 +24,11 @@ extern "C" {
 #define xdg_exported zxdg_exported_v2
 #define xdg_exported_add_listener zxdg_exported_v2_add_listener
 #define xdg_exporter zxdg_exporter_v2
+#define xdg_exporter_destroy zxdg_exporter_v2_destroy
 #define xdg_exporter_interface zxdg_exporter_v2_interface
 #define xdg_exporter_export_toplevel zxdg_exporter_v2_export_toplevel
 #define xdg_importer zxdg_importer_v2
+#define xdg_importer_destroy zxdg_importer_v2_destroy
 #define xdg_importer_interface zxdg_importer_v2_interface
 #define xdg_importer_import_toplevel zxdg_importer_v2_import_toplevel
 #define xdg_toplevel_decoration zxdg_toplevel_decoration_v1
@@ -70,6 +72,7 @@ struct app {
     int32_t width;
     int32_t height;
     float r, g, b;
+    void* extra;
 };
 
 // init everything, allow passing custom initial values

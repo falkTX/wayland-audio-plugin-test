@@ -21,7 +21,7 @@ WAYLAND_PROTOCOL_FILE_XDG_DECORATION = $(WAYLAND_PROTOCOLS_DIR)/unstable/xdg-dec
 WAYLAND_PROTOCOL_FILE_XDG_FOREIGN = $(WAYLAND_PROTOCOLS_DIR)/unstable/xdg-foreign/xdg-foreign-unstable-v2.xml
 WAYLAND_PROTOCOL_FILE_XDG_SHELL = $(WAYLAND_PROTOCOLS_DIR)/stable/xdg-shell/xdg-shell.xml
 
-TARGETS = gtk3-embed gtk3-host gtk4-host qt5-host qt6-host test-crash wayland-audio-plugin-test wayland-audio-plugin-test.lv2/plugin.so wl-host
+TARGETS = gtk3-embed gtk4-embed gtk3-host gtk4-host qt5-host qt6-host test-crash wayland-audio-plugin-test wayland-audio-plugin-test.lv2/plugin.so wl-host
 
 all: build
 
@@ -35,6 +35,9 @@ run: wayland-audio-plugin-test
 
 gtk3-embed: gtk3-embed.c app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-foreign.o proto/xdg-shell.o
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs gtk+-wayland-3.0) -o $@
+
+gtk4-embed: gtk4-embed.c app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-foreign.o proto/xdg-shell.o
+	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs gtk4-wayland) -o $@
 
 gtk3-host: gtk3-host.c app.o gtk-wayland-decoration.o proto/xdg-decoration.o proto/xdg-foreign.o proto/xdg-shell.o
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(shell pkg-config --cflags --libs gtk+-wayland-3.0) -o $@

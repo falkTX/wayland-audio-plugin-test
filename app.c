@@ -64,6 +64,11 @@ static void wl_registry_global_announce(struct app* const app,
         assert(app->xdg_importer == NULL);
         app->xdg_importer = wl_registry_bind(app->wl_registry, name, &xdg_importer_interface, 1);
     }
+    else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
+    {
+        assert(app->xdg_wm_base == NULL);
+        app->xdg_wm_base = wl_registry_bind(app->wl_registry, name, &xdg_wm_base_interface, 1);
+    }
     else if (app->embed)
     {
         /**/ if (strcmp(interface, wl_subcompositor_interface.name) == 0)
@@ -89,13 +94,7 @@ static void wl_registry_global_announce(struct app* const app,
             app->xdg_decoration_manager = wl_registry_bind(app->wl_registry, name, &xdg_decoration_manager_interface, 1);
             app->supports_decorations = true;
         }
-        else
        #endif
-        if (strcmp(interface, xdg_wm_base_interface.name) == 0)
-        {
-            assert(app->xdg_wm_base == NULL);
-            app->xdg_wm_base = wl_registry_bind(app->wl_registry, name, &xdg_wm_base_interface, 1);
-        }
     }
 }
 
@@ -515,17 +514,16 @@ struct app* app_init(struct wl_display* const wl_display,
     assert(app->wl_shm != NULL);
     assert(app->xdg_exporter != NULL);
     assert(app->xdg_importer != NULL);
+    assert(app->xdg_wm_base != NULL);
 
     if (app->embed)
     {
         assert(app->wl_subcompositor != NULL);
         assert(app->xdg_decoration_manager == NULL);
-        assert(app->xdg_wm_base == NULL);
     }
     else
     {
         assert(app->wl_subcompositor == NULL);
-        assert(app->xdg_wm_base != NULL);
 
         // NOTE mutter and weston do not implement this one
         if (app->xdg_decoration_manager == NULL)
@@ -534,16 +532,20 @@ struct app* app_init(struct wl_display* const wl_display,
             // so here we restart the whole thing and embed ourselves inside a gtk app that does decoration for us.
 
             wl_compositor_destroy(app->wl_compositor);
-            app->wl_compositor = NULL;
             wl_seat_destroy(app->wl_seat);
-            app->wl_seat = NULL;
             wl_shm_destroy(app->wl_shm);
-            app->wl_shm = NULL;
+            xdg_exporter_destroy(app->xdg_exporter);
+            xdg_importer_destroy(app->xdg_importer);
             xdg_wm_base_destroy(app->xdg_wm_base);
-            app->xdg_wm_base = NULL;
             wl_registry_destroy(app->wl_registry);
-            app->wl_registry = NULL;
             wl_display_disconnect(app->wl_display);
+            app->wl_compositor = NULL;
+            app->wl_seat = NULL;
+            app->wl_shm = NULL;
+            app->xdg_exporter = NULL;
+            app->xdg_importer = NULL;
+            app->xdg_wm_base = NULL;
+            app->wl_registry = NULL;
             app->wl_display = NULL;
 
             app->gtkdecor = gtk_decoration_init(INITIAL_WIDTH * scaleFactor,
@@ -572,7 +574,9 @@ struct app* app_init(struct wl_display* const wl_display,
             assert(app->wl_shm != NULL);
             assert(app->wl_subcompositor != NULL);
             assert(app->xdg_decoration_manager == NULL);
-            assert(app->xdg_wm_base == NULL);
+            assert(app->xdg_exporter != NULL);
+            assert(app->xdg_importer != NULL);
+            assert(app->xdg_wm_base != NULL);
 
             // parent surface comes from gtk decoration
             parent_wl_surface = app->gtkdecor->wl_surface;
@@ -854,6 +858,10 @@ void app_destroy(struct app* const app)
         xdg_toplevel_destroy(app->xdg_toplevel);
         xdg_surface_destroy(app->xdg_surface);
     }
+
+    xdg_exporter_destroy(app->xdg_exporter);
+    xdg_importer_destroy(app->xdg_importer);
+
     wl_keyboard_destroy(app->wl_keyboard);
     wl_pointer_destroy(app->wl_pointer);
     wl_surface_destroy(app->wl_surface);
@@ -870,9 +878,9 @@ void app_destroy(struct app* const app)
     {
         if (app->xdg_decoration_manager != NULL)
             xdg_decoration_manager_destroy(app->xdg_decoration_manager);
-        xdg_wm_base_destroy(app->xdg_wm_base);
     }
 
+    xdg_wm_base_destroy(app->xdg_wm_base);
     wl_registry_destroy(app->wl_registry);
 
     if (app->gtkdecor == NULL && !app->embed)

@@ -26,11 +26,8 @@ static char* exported_handle = NULL;
 
 static void app_exported(GdkWindow* const window, struct xdg_exported* const xdg_exported, const char* const handle)
 {
-    printf("app_exported %p\n", window);
     gdk_wayland_window_set_transient_for_exported(window, (char*)handle);
 
-    (void)window;
-    (void)handle;
     (void)xdg_exported;
 }
 
@@ -50,15 +47,8 @@ static void window_exported_cb(GdkWindow* const window, const char* const handle
     struct xdg_exported* exported = xdg_exporter_export_toplevel(app->xdg_exporter, app->wl_surface);
     assert(exported);
 
-    printf("export %p\n", window);
     int err = zxdg_exported_v2_add_listener(exported, &xdg_exported_listener, window);
     assert(err == 0);
-
-    // struct zxdg_exporter_v2 *zxdg_exporter_v2, struct wl_surface *surface
-    // zxdg_exporter_v2_export_toplevel();
-    (void)app;
-    (void)app_exported;
-    (void)window;
 }
 
 static void widget_realize_cb(GtkWidget* const widget, struct app* const app)
