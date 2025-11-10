@@ -252,6 +252,7 @@ static void wl_pointer_axis_discrete(struct app* const app,
     LOG("[%s] %s(%p, %p, %u, %d)\n", app->name, __func__, app, wl_pointer, axis, discrete);
 }
 
+#ifdef WL_POINTER_AXIS_VALUE120_SINCE_VERSION
 static void wl_pointer_axis_value120(struct app* const app,
                                      struct wl_pointer* const wl_pointer,
                                      const uint32_t axis,
@@ -259,6 +260,7 @@ static void wl_pointer_axis_value120(struct app* const app,
 {
     LOG("[%s] %s(%p, %p, %u, %d)\n", app->name, __func__, app, wl_pointer, axis, value120);
 }
+#endif
 
 #ifdef WL_POINTER_AXIS_RELATIVE_DIRECTION_SINCE_VERSION
 static void wl_pointer_axis_relative_direction(struct app* const app,
@@ -280,7 +282,9 @@ struct wl_pointer_listener wl_pointer_listener = {
     wl_pointer_axis_source,
     wl_pointer_axis_stop,
     wl_pointer_axis_discrete,
+#ifdef WL_POINTER_AXIS_VALUE120_SINCE_VERSION
     wl_pointer_axis_value120,
+#endif
 #ifdef WL_POINTER_AXIS_RELATIVE_DIRECTION_SINCE_VERSION
     wl_pointer_axis_relative_direction,
 #endif
@@ -454,18 +458,22 @@ static void xdg_toplevel_configure_bounds(struct app* const app,
     LOG("[%s] %s(%p, %p, %d, %d)\n", app->name, __func__, app, xdg_toplevel, width, height);
 }
 
+#ifdef XDG_TOPLEVEL_WM_CAPABILITIES_SINCE_VERSION
 static void xdg_toplevel_wm_capabilities(struct app* const app,
                                          struct xdg_toplevel* const xdg_toplevel,
                                          struct wl_array* const capabilities)
 {
     LOG("[%s] %s(%p, %p, %p)\n", app->name, __func__, app, xdg_toplevel, capabilities);
 }
+#endif
 
 static const struct xdg_toplevel_listener xdg_toplevel_listener = {
     xdg_toplevel_configure,
     xdg_toplevel_close,
     xdg_toplevel_configure_bounds,
+#ifdef XDG_TOPLEVEL_WM_CAPABILITIES_SINCE_VERSION
     xdg_toplevel_wm_capabilities,
+#endif
 };
 
 // --------------------------------------------------------------------------------------------------------------------
